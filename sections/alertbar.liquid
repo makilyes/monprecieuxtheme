@@ -1,0 +1,70 @@
+{%- for block in section.blocks -%}
+  {%- case block.type -%}
+    {%- when 'alertbar' -%}
+      <div class="alertbar"  aria-label="{{ 'sections.header.announcement' | t }}" {{ block.shopify_attributes }}>
+        {%- if block.settings.text1 != blank -%}
+          {%- if block.settings.link != blank -%}
+            <a href="{{ block.settings.link }}" class="announcement-bar__link link link--text focus-inset animate-arrow">
+          {%- endif -%}
+           <div class="alertbar__wrapper" style="background-color:{{block.settings.background-color}};">
+            {{ block.settings.text1 | escape }}
+           </div>                
+          {%- if block.settings.link != blank -%}
+            </a>
+          {%- endif -%}
+        {%- endif -%}
+      </div>
+  {%- endcase -%}
+{%- endfor -%}
+
+{% schema %}
+{
+  "name": "alertbar",
+  "max_blocks": 1,
+  "blocks": [
+    {
+      "type": "alertbar",
+      "name": "alertbar",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text1",
+          "default": "OFFRE SPÉCIAL SUR LES BRACELETS HOMME",
+          "label": "t:sections.announcement-bar.blocks.announcement.settings.text.label"
+        },
+        {
+          "type": "color",
+          "id": "background-color",
+          "label": "Background color",
+          "default": "#f39090"
+        }, 
+        {
+          "type": "url",
+          "id": "link",
+          "label": "t:sections.announcement-bar.blocks.announcement.settings.link.label"
+        }
+      ]
+    }
+  ],
+  "default": {
+    "blocks": [
+      {
+        "type": "alertbar"
+      }
+    ]
+  }
+}
+{% endschema %}
+
+<script> 
+
+var swiper = new Swiper(".mySwiper", {
+        spaceBetween: 30,
+        centeredSlides: true,
+        autoplay: {
+          delay: 2000,
+          disableOnInteraction: false,
+        },
+      });
+
+</script>
