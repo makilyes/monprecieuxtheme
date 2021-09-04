@@ -1,0 +1,39 @@
+.section-nos-atouts {
+    background-color: #F3F3F3;
+    outline: 1px solid rgba(204,204,204,0.42);
+    outline-offset: -10px;
+    font-size: 19px;
+    font-weight: 300;
+    color: #000000;
+    padding: 45px;
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+.section-nos-atouts__title {
+    font-size:  2.4rem;
+    text-align: center;
+    margin-bottom: 45px;
+}
+
+.nos-atouts__wrapper {
+display: flex;
+text-align: center;
+justify-content: space-evenly;
+}
+
+.nos-atouts__details .fas {
+ font-size: 25px;
+    }
+
+    .section-nos-atouts__detailsTitle {
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .section-nos-atouts__detailsParagraph {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: lighter;
+
+    }

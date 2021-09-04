@@ -2297,7 +2297,7 @@ details-disclosure > details {
   height: 100%;
 }
 
-.swiper-slide {
+.swiper-slide.alert {
   text-align: center;
   font-size: 12px;
   background: #000;

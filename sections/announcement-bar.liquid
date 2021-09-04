@@ -6,15 +6,15 @@
           {%- if block.settings.link != blank -%}
             <a href="{{ block.settings.link }}" class="announcement-bar__link link link--text focus-inset animate-arrow">
           {%- endif -%}
-            <div class="swiper mySwiper">
+            <div class="swiper announcementSwiper">
               <div class="swiper-wrapper">
-                <div class="swiper-slide">
+                <div class="swiper-slide alert">
                   {{ block.settings.text1 | escape }}
                 </div>
-                <div class="swiper-slide">
+                <div class="swiper-slide alert">
                   {{ block.settings.text2 | escape }}
                 </div>
-                <div class="swiper-slide">{{ block.settings.text3 | escape }}</div>
+                <div class="swiper-slide alert">{{ block.settings.text3 | escape }}</div>
               </div>
             </div>
           {%- if block.settings.link != blank -%}
@@ -100,7 +100,7 @@
 
 <script> 
 
-var swiper = new Swiper(".mySwiper", {
+var swiper = new Swiper(".announcementSwiper", {
         spaceBetween: 30,
         centeredSlides: true,
         autoplay: {
