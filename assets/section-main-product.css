@@ -760,3 +760,30 @@ a.product__text {
   margin: 0;
   width: 2.2rem;
 }
+
+
+
+
+/*----------------------------------------------------------------*/
+
+.combo-pierre {
+  position: relative;
+}
+
+.list-stones {
+  display: grid;
+  grid-template-rows: auto;
+  grid-template-columns: repeat(auto-fit, 70px);;
+  grid-gap: 15px;
+  font-size:13px;
+  align-content: center;
+  justify-content: center;
+  max-width: 300px;
+  list-style-type: none;
+  
+
+}
+
+.remove-margins {
+  margin: 0;
+}

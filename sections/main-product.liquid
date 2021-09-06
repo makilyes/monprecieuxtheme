@@ -17,7 +17,7 @@
   <link id="ModelViewerOverride" rel="stylesheet" href="{{ 'component-model-viewer-ui.css' | asset_url }}" media="print" onload="this.media='all'">
 {%- endif -%}
 
-<section class="page-width">
+<section id="productPage" class="page-width">
   <div class="product grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
     <div class="grid__item product__media-wrapper">
       <slider-component class="slider-mobile-gutter">
@@ -196,6 +196,7 @@
                           <input type="radio" id="{{ section.id }}-{{ option.name }}-{{ forloop.index0 }}"
                                 name="{{ option.name }}"
                                 value="{{ value | escape }}"
+                                v-model="variant_selection.option{{ option.position }}"
                                 form="product-form-{{ section.id }}"
                                 {% if option.selected_value == value %}checked{% endif %}
                           >
@@ -209,6 +210,106 @@
                     {{ product.variants | json }}
                   </script>
                 </variant-radios>
+                <label for="nombrePrenom">
+                  Nombre de Prenom
+                </label>
+                <select id="nombrePrenom" v-model.number="nombre_prenom">
+                    <option >1</option>
+                    <option >2</option>
+                    <option >3</option>
+                    <option >4</option>
+                    <option >5</option>
+                </select>
+                <div v-for="n in nombre_prenom" :key="n">
+                  <div>
+                    <Label for="name-${nombre_prenom}" >Inserez votre prenom ${n}</Label>
+                    <input type="text" id="name-${nombre_prenom}" required>
+                  </div>
+                  <div class="combo-pierre">
+
+                    <Label for="pierre-de-naissance" >Choisir la pierre de naissance</Label>
+                    <div class="_2pg4B _28Zrh">
+                      <img src="https://static.myka.com/option-image/f60d7fc1db2442729504be3ebcd8947b.png">
+                      <span>January - Garnet</span>
+                    </div>
+                    <div class="">
+                      <div class="">
+                        <ul class="list-stones">
+                          <li class="">
+                            <img src="https://static.myka.com/option-image/f60d7fc1db2442729504be3ebcd8947b.png">
+                            <p class="remove-margins">January - Garnet</p>
+                          </li>
+                          <li>
+                            <img src="https://static.myka.com/option-image/d0309897266e4a5585d8056b417247e3.png">
+                            <p class="remove-margins">February - Amethyst </p>
+                          </li>
+                          <li>
+                            <img src="https://static.myka.com/option-image/364f9831776c45aa845fa111a4e61217.png">
+                            <p class="remove-margins">March -  Aquamarine </p>
+                          </li>
+                          <li>
+                            <img src="https://static.myka.com/option-image/57b3d1a35c3f4c938714cda3dbf5b497.png">
+                            <p class="remove-margins">April - Clear Crystal</p>
+                          </li>
+                          <li>
+                            <img src="https://static.myka.com/option-image/717f56cc04a84ea887595d85513dd91e.png">
+                            <p class="remove-margins">May - Emerald</p>
+                          </li>
+                          <li>
+                            <img src="https://static.myka.com/option-image/2d389886eeb44babb9b7f73f82d599f4.png">
+                            <p class="remove-margins">June - Light Amethyst</p>
+                          </li>
+                          <li>
+                            <img src="https://static.myka.com/option-image/393a2749ed66461ea30336070ec36beb.png">
+                            <p class="remove-margins">July - Ruby</p>
+                          </li>
+                          <li>
+                            <img src="https://static.myka.com/option-image/4e931e3e539243bf85d0d8f37bfb33e3.png">
+                            <p class="remove-margins">August - Peridot</p>
+                          </li>
+                          <li>
+                            <img src="https://static.myka.com/option-image/f0224ea1a2994198b3786ded393a9f6a.png">
+                            <p class="remove-margins">September - Sapphire</p>
+                          </li>
+                          <li>
+                            <img src="https://static.myka.com/option-image/ec43048dff324a3784fd62c14356fe4e.png">
+                            <p class="remove-margins">October - Rose Quartz</p>
+                          </li>
+                          <li>
+                            <img src="https://static.myka.com/option-image/2c945eecb0e94f1db0c8b10dc82dfbab.png">
+                            <p class="remove-margins">November - Yellow Topaz</p>
+                          </li>
+                          <li>
+                            <img src="https://static.myka.com/option-image/d185da444bf14c8885889233bcc0945e.png">
+                            <p class="remove-margins">December - Blue Topaz</p>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+
+
+
+
+
+                    <!--<select id="pierre-de-naissance" v-model="pierre_de_naissance"> -->
+                      <!-- pierre_de_naissance: "Janvier - Grenat" -->
+                      <!-- <option >Janvier - Grenat</option>
+                      <option >Fevrier - Amethyste</option>
+                      <option >Mars - Algue Marine</option>
+                      <option >Avril - Cristal</option>
+                      <option >Mai - Emeraude</option>
+                      <option >Juin - Amethyste Clair</option>
+                      <option >Juillet - Rubis</option>
+                      <option >Aout - Peridot</option>
+                      <option >Septembre - Saphir</option>
+                      <option >Octobre - Quartz Rose</option>
+                      <option >Novembre - Topaze Jaune</option>
+                      <option >Decembre - Topaze Bleu</option>
+                    </select> -->
+                  </div>
+                </div>
+
               {%- else -%}
                 <variant-selects class="no-js-hidden" data-section="{{ section.id }}" data-url="{{ product.url }}" {{ block.shopify_attributes }}>
                   {%- for option in product.options_with_values -%}
@@ -379,6 +480,60 @@
     </modal-dialog>
   {%- endfor -%}
 </section>
+
+
+
+<script>
+
+  const ProductPage = { 
+    name: "Product",
+    delimiters: ["${", "}"],
+    data() {
+      return {
+        current_variant_id: "{{ product.selected_or_first_available_variant.id }}",
+        variant_selection: {
+          option1: "{{ product.options_with_values[0].selected_value }}",
+          option2: "{{ product.options_with_values[1].selected_value }}",
+          option3: "{{ product.options_with_values[2].selected_value }}",
+        },
+        variants: [
+          {% for variant in product.variants %}
+            {
+              id: "{{ variant.id }}",
+              available: {{ variant.available }},
+              option1: "{{ variant.option1 }}",
+              option2: "{{ variant.option2 }}",
+              option3: "{{ variant.option3 }}",
+              price: "{{ variant.price | money }}",
+              {% assign img_url = variant.image.src | img_url: '500x', scale: 2 %}
+              image: "{% unless img_url contains 'no-image' %}{{ img_url }}{% endunless %}"
+            },
+          {% endfor %}
+        ],
+        fallback_product_image: "{{ featured_image | img_url: '500x', scale: 2 }}",
+        nombre_prenom: 1,
+        pierre_de_naissance: "Janvier - Grenat"
+      }
+    },
+    computed: {
+      current_variant() {
+        return this.variants.find(variant => variant.id == this.current_variant_id);
+      }
+    },
+    methods: {
+      
+    }
+  }
+
+  Vue.createApp(ProductPage).mount('#productPage');
+
+</script>
+
+
+
+
+
+
 
 {% javascript %}
   class ProductModal extends ModalDialog {
