@@ -214,84 +214,31 @@
                   Nombre de Prenom
                 </label>
                 <select id="nombrePrenom" v-model.number="nombre_prenom">
-                    <option >1</option>
-                    <option >2</option>
-                    <option >3</option>
-                    <option >4</option>
-                    <option >5</option>
+                    <option v-for="nombre in quantitee_max_prenom" >${nombre}</option>
                 </select>
-                <div v-for="n in nombre_prenom" :key="n">
+                <div v-for="(nombre_total, index) in nombre_prenom">
                   <div>
-                    <Label for="name-${nombre_prenom}" >Inserez votre prenom ${n}</Label>
-                    <input type="text" id="name-${nombre_prenom}" required>
+                    <!-- prenoms_stones[index].prenom -->
+                    <Label :for="'prenom' + index" >Inserez votre prenom ${nombre_total}</Label>
+                    <input type="text" v-bind:id="'prenom' + index" required v-model="prenoms_stones[index].prenom" :key="index">
                   </div>
                   <div class="combo-pierre">
-
                     <Label for="pierre-de-naissance" >Choisir la pierre de naissance</Label>
-                    <div class="_2pg4B _28Zrh">
+                    <div v-on:click="afficher_pierre">
                       <img src="https://static.myka.com/option-image/f60d7fc1db2442729504be3ebcd8947b.png">
                       <span>January - Garnet</span>
                     </div>
-                    <div class="">
+                    <div  class="list-stones_wrapper" v-bind:class="{isActive }">
                       <div class="">
                         <ul class="list-stones">
-                          <li class="">
-                            <img src="https://static.myka.com/option-image/f60d7fc1db2442729504be3ebcd8947b.png">
-                            <p class="remove-margins">January - Garnet</p>
-                          </li>
-                          <li>
-                            <img src="https://static.myka.com/option-image/d0309897266e4a5585d8056b417247e3.png">
-                            <p class="remove-margins">February - Amethyst </p>
-                          </li>
-                          <li>
-                            <img src="https://static.myka.com/option-image/364f9831776c45aa845fa111a4e61217.png">
-                            <p class="remove-margins">March -  Aquamarine </p>
-                          </li>
-                          <li>
-                            <img src="https://static.myka.com/option-image/57b3d1a35c3f4c938714cda3dbf5b497.png">
-                            <p class="remove-margins">April - Clear Crystal</p>
-                          </li>
-                          <li>
-                            <img src="https://static.myka.com/option-image/717f56cc04a84ea887595d85513dd91e.png">
-                            <p class="remove-margins">May - Emerald</p>
-                          </li>
-                          <li>
-                            <img src="https://static.myka.com/option-image/2d389886eeb44babb9b7f73f82d599f4.png">
-                            <p class="remove-margins">June - Light Amethyst</p>
-                          </li>
-                          <li>
-                            <img src="https://static.myka.com/option-image/393a2749ed66461ea30336070ec36beb.png">
-                            <p class="remove-margins">July - Ruby</p>
-                          </li>
-                          <li>
-                            <img src="https://static.myka.com/option-image/4e931e3e539243bf85d0d8f37bfb33e3.png">
-                            <p class="remove-margins">August - Peridot</p>
-                          </li>
-                          <li>
-                            <img src="https://static.myka.com/option-image/f0224ea1a2994198b3786ded393a9f6a.png">
-                            <p class="remove-margins">September - Sapphire</p>
-                          </li>
-                          <li>
-                            <img src="https://static.myka.com/option-image/ec43048dff324a3784fd62c14356fe4e.png">
-                            <p class="remove-margins">October - Rose Quartz</p>
-                          </li>
-                          <li>
-                            <img src="https://static.myka.com/option-image/2c945eecb0e94f1db0c8b10dc82dfbab.png">
-                            <p class="remove-margins">November - Yellow Topaz</p>
-                          </li>
-                          <li>
-                            <img src="https://static.myka.com/option-image/d185da444bf14c8885889233bcc0945e.png">
-                            <p class="remove-margins">December - Blue Topaz</p>
+                          <li class="" v-for="(birthStone, i) in birthStones" :value="{birthStone}"  v-model="prenoms_stones[index].birthStone" @click="register_stone({birthStone}, {index})" v-on:click=" afficher_pierre ">
+                            <img :src="birthStone.image">
+                            <p class="remove-margins">${birthStone.month}</p>
                           </li>
                         </ul>
                       </div>
                     </div>
-
-
-
-
-
-
+                    <hr>
                     <!--<select id="pierre-de-naissance" v-model="pierre_de_naissance"> -->
                       <!-- pierre_de_naissance: "Janvier - Grenat" -->
                       <!-- <option >Janvier - Grenat</option>
@@ -309,7 +256,7 @@
                     </select> -->
                   </div>
                 </div>
-
+                <button>Voir details commande</button>
               {%- else -%}
                 <variant-selects class="no-js-hidden" data-section="{{ section.id }}" data-url="{{ product.url }}" {{ block.shopify_attributes }}>
                   {%- for option in product.options_with_values -%}
@@ -511,8 +458,39 @@
           {% endfor %}
         ],
         fallback_product_image: "{{ featured_image | img_url: '500x', scale: 2 }}",
+        quantitee_max_prenom: [1,2,3,4,5,6,7],
         nombre_prenom: 1,
-        pierre_de_naissance: "Janvier - Grenat"
+        isActive: false,
+        pierre_de_naissance: "Janvier - Grenat",
+        birthStones : [
+          {month: 'January', image:'https://static.myka.com/option-image/f60d7fc1db2442729504be3ebcd8947b.png'},
+          {month: 'February', image:'https://static.myka.com/option-image/d0309897266e4a5585d8056b417247e3.png'},
+          {month: 'March', image:'https://static.myka.com/option-image/364f9831776c45aa845fa111a4e61217.png'},
+          {month: 'April', image:'https://static.myka.com/option-image/57b3d1a35c3f4c938714cda3dbf5b497.png'},
+          {month: 'May', image:'https://static.myka.com/option-image/717f56cc04a84ea887595d85513dd91e.png'},
+          {month: 'June', image:'https://static.myka.com/option-image/2d389886eeb44babb9b7f73f82d599f4.png'},
+          {month: 'July', image:'https://static.myka.com/option-image/393a2749ed66461ea30336070ec36beb.png'},
+          {month: 'August', image:'https://static.myka.com/option-image/4e931e3e539243bf85d0d8f37bfb33e3.png'},
+          {month: 'September', image:'https://static.myka.com/option-image/f0224ea1a2994198b3786ded393a9f6a.png'},
+          {month: 'October', image:'https://static.myka.com/option-image/ec43048dff324a3784fd62c14356fe4e.png'},
+          {month: 'November', image:'https://static.myka.com/option-image/2c945eecb0e94f1db0c8b10dc82dfbab.png'},
+          {month: 'December', image:'https://static.myka.com/option-image/d185da444bf14c8885889233bcc0945e.png'}
+          ],
+        prenoms_stones: [
+          {prenom: '', birthStone: ''},
+          {prenom: '', birthStone: ''},
+          {prenom: '', birthStone: ''},
+          {prenom: '', birthStone: ''},
+          {prenom: '', birthStone: ''},
+          {prenom: '', birthStone: ''},
+          {prenom: '', birthStone: ''},
+          {prenom: '', birthStone: ''},
+          {prenom: '', birthStone: ''},
+          {prenom: '', birthStone: ''},
+          {prenom: '', birthStone: ''},
+          {prenom: '', birthStone: ''},
+          {prenom: '', birthStone: ''},
+        ], 
       }
     },
     computed: {
@@ -520,14 +498,32 @@
         return this.variants.find(variant => variant.id == this.current_variant_id);
       }
     },
+    created() {
+        axios.get("/products/{{ product.handle }}.js").then((results) => {
+          console.log(results);
+        });
+      },
     methods: {
-      
+      afficher_pierre() {
+        this.isActive = !this.isActive;
+      }, 
+      register_stone(value, index) {
+        this.prenoms_stones[index.index].birthStone = value.birthStone.month;
+      },
+      updateMyProp($event, index) {
+
+      }
     }
   }
 
   Vue.createApp(ProductPage).mount('#productPage');
 
 </script>
+
+
+
+
+
 
 
 

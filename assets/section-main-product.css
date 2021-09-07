@@ -787,3 +787,15 @@ a.product__text {
 .remove-margins {
   margin: 0;
 }
+
+.list-stones_wrapper.isActive {
+  display: block;
+}
+
+.list-stones_wrapper{
+  display: none;
+} 
+
+.affichage-false {
+  display: none;
+}
