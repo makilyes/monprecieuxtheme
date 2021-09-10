@@ -788,12 +788,12 @@ a.product__text {
   margin: 0;
 }
 
-.list-stones_wrapper.isActive {
+/* .list-stones_wrapper.isActive {
   display: block;
-}
+} */
 
 .list-stones_wrapper{
-  display: none;
+  display: block;
 } 
 
 .affichage-false {

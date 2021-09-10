@@ -6,6 +6,7 @@
 {{ 'component-slider.css' | asset_url | stylesheet_tag }}
 {{ 'component-rating.css' | asset_url | stylesheet_tag }}
 
+
 <link rel="stylesheet" href="{{ 'component-deferred-media.css' | asset_url }}" media="print" onload="this.media='all'">
 
 <script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script>
@@ -188,7 +189,7 @@
           {%- when 'variant_picker' -%}
             {%- unless product.has_only_default_variant -%}
               {%- if block.settings.picker_type == 'button' -%}
-                <variant-radios class="no-js-hidden" data-section="{{ section.id }}" data-url="{{ product.url }}" {{ block.shopify_attributes }}>
+                <variant-radios class="no-js-hidden" data-section="{{ section.id }}" data-url="{{ product.url }}" {{ block.shopify_attributes }} >
                   {%- for option in product.options_with_values -%}
                       <fieldset class="js product-form__input">
                         <legend class="form__label">{{ option.name }}</legend>
@@ -199,6 +200,8 @@
                                 v-model="variant_selection.option{{ option.position }}"
                                 form="product-form-{{ section.id }}"
                                 {% if option.selected_value == value %}checked{% endif %}
+                                @change="variant_from_options"
+                                :value="current_variant_id"
                           >
                           <label for="{{ section.id }}-{{ option.name }}-{{ forloop.index0 }}">
                             {{ value }}
@@ -214,49 +217,37 @@
                   Nombre de Prenom
                 </label>
                 <select id="nombrePrenom" v-model.number="nombre_prenom">
-                    <option v-for="nombre in quantitee_max_prenom" >${nombre}</option>
+                    <option v-for="nombre in {{ product.metafields.my_fields.nombre_max }}" >${nombre}</option>
                 </select>
                 <div v-for="(nombre_total, index) in nombre_prenom">
                   <div>
-                    <!-- prenoms_stones[index].prenom -->
                     <Label :for="'prenom' + index" >Inserez votre prenom ${nombre_total}</Label>
                     <input type="text" v-bind:id="'prenom' + index" required v-model="prenoms_stones[index].prenom" :key="index">
                   </div>
                   <div class="combo-pierre">
                     <Label for="pierre-de-naissance" >Choisir la pierre de naissance</Label>
-                    <div v-on:click="afficher_pierre">
-                      <img src="https://static.myka.com/option-image/f60d7fc1db2442729504be3ebcd8947b.png">
-                      <span>January - Garnet</span>
+                    <div>
+
+                      <img @click="open(index)" v-if="birthStone_selected[index].image" :src="birthStone_selected[index].image">
+                      <img @click="open(index)" v-else :src="birthStones[0].image">
+
+                      <span @click="birthStone_line_hide[index] = !birthStone_line_hide[index]" v-if="birthStone_selected[index].month">${birthStone_selected[index].month}</span>
+                      <span @click="birthStone_line_hide[index] = !birthStone_line_hide[index]" v-else="">${birthStones[0].month}</span>
+
                     </div>
-                    <div  class="list-stones_wrapper" v-bind:class="{isActive }">
+                    <div  class=" list-stones_wrapper " v-if="birthStone_line_hide[index].state == true || birthStone_line_hide[index] == true" >
                       <div class="">
                         <ul class="list-stones">
-                          <li class="" v-for="(birthStone, i) in birthStones" :value="{birthStone}"  v-model="prenoms_stones[index].birthStone" @click="register_stone({birthStone}, {index})" v-on:click=" afficher_pierre ">
-                            <img :src="birthStone.image">
-                            <p class="remove-margins">${birthStone.month}</p>
+                          <li class="" v-for="(birthStone, i) in birthStones" :value="{birthStone}"  v-model="prenoms_stones[index].birthStone" @click="register_stone({birthStone}, {index})" >
+                            <img :src="birthStone.image" @click="birthStone_line_hide[index] = !birthStone_line_hide[index]">
+                            <p class="remove-margins" @click="birthStone_line_hide[index] = !birthStone_line_hide[index]">${birthStone.month}</p>
                           </li>
                         </ul>
                       </div>
                     </div>
                     <hr>
-                    <!--<select id="pierre-de-naissance" v-model="pierre_de_naissance"> -->
-                      <!-- pierre_de_naissance: "Janvier - Grenat" -->
-                      <!-- <option >Janvier - Grenat</option>
-                      <option >Fevrier - Amethyste</option>
-                      <option >Mars - Algue Marine</option>
-                      <option >Avril - Cristal</option>
-                      <option >Mai - Emeraude</option>
-                      <option >Juin - Amethyste Clair</option>
-                      <option >Juillet - Rubis</option>
-                      <option >Aout - Peridot</option>
-                      <option >Septembre - Saphir</option>
-                      <option >Octobre - Quartz Rose</option>
-                      <option >Novembre - Topaze Jaune</option>
-                      <option >Decembre - Topaze Bleu</option>
-                    </select> -->
                   </div>
                 </div>
-                <button>Voir details commande</button>
               {%- else -%}
                 <variant-selects class="no-js-hidden" data-section="{{ section.id }}" data-url="{{ product.url }}" {{ block.shopify_attributes }}>
                   {%- for option in product.options_with_values -%}
@@ -269,9 +260,11 @@
                           class="select__select"
                           name="options[{{ option.name | escape }}]"
                           form="product-form-{{ section.id }}"
+                          v-model="variant_selection.option{{ product_option.position }}"
+                          @click="variant_from_options"
                         >
                           {%- for value in option.values -%}
-                            <option value="{{ value | escape }}" {% if option.selected_value == value %}selected="selected"{% endif %}>
+                            <option value="{{ value | escape }}" {% if option.selected_value == value %}selected="selected"{% endif %}  @click="variant_from_options">
                               {{ value }}
                             </option>
                           {%- endfor -%}
@@ -287,7 +280,9 @@
                 </variant-selects>
               {%- endif -%}
             {%- endunless -%}
-
+            {% for nombre_max in product.metafields.my_fields.nombre_de_prenom_max %}
+            <p> {{ nombre_max }} </p>
+          {% endfor %}
             <noscript class="product-form__noscript-wrapper-{{ section.id }}">
               <div class="product-form__input{% if product.has_only_default_variant %} hidden{% endif %}">
                 <label class="form__label" for="Variants-{{ section.id }}">{{ 'products.product.product_variants' | t }}</label>
@@ -312,14 +307,18 @@
           {%- when 'buy_buttons' -%}
             <div {{ block.shopify_attributes }}>
               <product-form class="product-form">
-                {%- form 'product', product, id: product_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
-                  <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+                {%- form 'product', product, id: product_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form'  -%}
+                  <input type="hidden" name="id" :value="current_variant_id">
+                  <input type="hidden" name="quantity" value="1">
+                  <input type="hidden" name="properties[Detail]" :value="detailsCommand"> 
+
                   <div class="product-form__buttons">
                     <button
                       type="submit"
                       name="add"
                       class="product-form__submit button button--full-width {% if block.settings.show_dynamic_checkout and product.selling_plan_groups == empty %}button--secondary{% else %}button--primary{% endif %}"
                     {% if product.selected_or_first_available_variant.available == false %}disabled{% endif %}
+                    @click="addToCart"
                     >
                         {%- if product.selected_or_first_available_variant.available -%}
                           {{ 'products.product.add_to_cart' | t }}
@@ -431,6 +430,7 @@
 
 
 <script>
+// import {CartNotification} from '../assets/cart-notification.js'
 
   const ProductPage = { 
     name: "Product",
@@ -460,8 +460,8 @@
         fallback_product_image: "{{ featured_image | img_url: '500x', scale: 2 }}",
         quantitee_max_prenom: [1,2,3,4,5,6,7],
         nombre_prenom: 1,
-        isActive: false,
-        pierre_de_naissance: "Janvier - Grenat",
+        show_birthstoneList: false,
+
         birthStones : [
           {month: 'January', image:'https://static.myka.com/option-image/f60d7fc1db2442729504be3ebcd8947b.png'},
           {month: 'February', image:'https://static.myka.com/option-image/d0309897266e4a5585d8056b417247e3.png'},
@@ -476,42 +476,120 @@
           {month: 'November', image:'https://static.myka.com/option-image/2c945eecb0e94f1db0c8b10dc82dfbab.png'},
           {month: 'December', image:'https://static.myka.com/option-image/d185da444bf14c8885889233bcc0945e.png'}
           ],
+          birthStone_line_hide: [
+            {state : false},
+            {state : false},
+            {state : false}
+          ],
+        birthStone_selected: [
+          {month: '', image:''},
+          {month: '', image:''},
+          {month: '', image:''}
+        ],
         prenoms_stones: [
           {prenom: '', birthStone: ''},
           {prenom: '', birthStone: ''},
-          {prenom: '', birthStone: ''},
-          {prenom: '', birthStone: ''},
-          {prenom: '', birthStone: ''},
-          {prenom: '', birthStone: ''},
-          {prenom: '', birthStone: ''},
-          {prenom: '', birthStone: ''},
-          {prenom: '', birthStone: ''},
-          {prenom: '', birthStone: ''},
-          {prenom: '', birthStone: ''},
-          {prenom: '', birthStone: ''},
-          {prenom: '', birthStone: ''},
-        ], 
+          {prenom: '', birthStone: ''}
+
+        ],
+        detailsCommande: [''],
+  
       }
     },
     computed: {
       current_variant() {
         return this.variants.find(variant => variant.id == this.current_variant_id);
+        console.log(this.birthStone_line_hide);
+
       }
+
     },
     created() {
         axios.get("/products/{{ product.handle }}.js").then((results) => {
-          console.log(results);
+           console.log(results);
         });
+
+        this.birthStone_selected[0].month = this.birthStones[0].month;
+        this.birthStone_selected[0].image = this.birthStones[0].image;
+
+        for (let i = 0; i < 3; i++) {
+            this.birthStone_line_hide[i] = false;
+                    
+        };
+
+        console.log(this.birthStone_line_hide);
       },
     methods: {
-      afficher_pierre() {
+      variant_from_options() {
+        const variant = this.variants.find((variant) => {
+          var match = true;
+          if(variant.option1 != '') {
+            match = variant.option1 == this.variant_selection.option1
+          }
+          if(match && variant.option2 != '') {
+            match = variant.option2 == this.variant_selection.option2
+          }
+          if(match && variant.option3 != '') {
+            match = variant.option3 == this.variant_selection.option3
+          }
+          return match;
+        });
+        this.current_variant_id = variant.id;
+        console.log(`voici mon current_variant_id : ${this.current_variant_id}`)
+      },
+      afficher_pierre(index) {
         this.isActive = !this.isActive;
+        console.log(index);
       }, 
       register_stone(value, index) {
         this.prenoms_stones[index.index].birthStone = value.birthStone.month;
+        // thi.birthStone_selected.map( item => {
+        //   console.log(item);
+        // });
+        this.birthStone_selected[index.index].month = value.birthStone.month;
+        this.birthStone_selected[index.index].image = value.birthStone.image;
+        console.log(this.active);
       },
-      updateMyProp($event, index) {
+      addToCart() {
+        const prenoms = this.prenoms_stones.prenom;
+        const birthStones = this.prenoms_stones.birthStone;
+        const detailsCommand = [];
 
+        let data = {
+            id: this.current_variant_id,
+            quantity: 1,
+            properties: {
+              Details: detailsCommand
+            }
+          };
+
+        this.prenoms_stones.forEach( (prenom_pierre, index) => {
+          if(prenom_pierre.prenom != '') {
+            let numero = index + 1;
+            detailsCommand.push(' Prenom' + numero + ' : ' + prenom_pierre.prenom + ' - Mois de naissance: ' + prenom_pierre.birthStone + ' // ')
+          }
+        });
+
+          axios
+          .post("/cart/add.js", data)
+          .then((response) => {
+            console.log(response)
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+          
+
+      },
+      open(index){
+        console.log(index);
+        for (let i = 0; i < 3; i++) {
+          if(i != index) {
+            this.birthStone_line_hide[i] = false;
+          }          
+        };
+        this.birthStone_line_hide[index]= !this.birthStone_line_hide[index];
+        console.log(this.birthStone_line_hide);
       }
     }
   }
