@@ -482,15 +482,18 @@
             {state : false}
           ],
         birthStone_selected: [
+          {%for nombre_max in product.metafields.my_fields.nombre_de_prenom_max %}
           {month: '', image:''},
-          {month: '', image:''},
-          {month: '', image:''}
+          // {month: '', image:''},
+          // {month: '', image:''}
+          {% endfor %}
         ],
         prenoms_stones: [
+        {%for nombre_max in product.metafields.my_fields.nombre_de_prenom_max %}
           {prenom: '', birthStone: ''},
-          {prenom: '', birthStone: ''},
-          {prenom: '', birthStone: ''}
-
+          // {prenom: '', birthStone: ''},
+          // {prenom: '', birthStone: ''}
+        {% endfor %}
         ],
         detailsCommande: [''],
   
