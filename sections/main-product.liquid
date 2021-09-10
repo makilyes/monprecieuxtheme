@@ -280,9 +280,6 @@
                 </variant-selects>
               {%- endif -%}
             {%- endunless -%}
-            {% for nombre_max in product.metafields.my_fields.nombre_de_prenom_max %}
-            <p> {{ nombre_max }} </p>
-          {% endfor %}
             <noscript class="product-form__noscript-wrapper-{{ section.id }}">
               <div class="product-form__input{% if product.has_only_default_variant %} hidden{% endif %}">
                 <label class="form__label" for="Variants-{{ section.id }}">{{ 'products.product.product_variants' | t }}</label>
@@ -476,24 +473,20 @@
           {month: 'November', image:'https://static.myka.com/option-image/2c945eecb0e94f1db0c8b10dc82dfbab.png'},
           {month: 'December', image:'https://static.myka.com/option-image/d185da444bf14c8885889233bcc0945e.png'}
           ],
-          birthStone_line_hide: [
+        birthStone_line_hide: [
+          {% for nombre_max in (1..product.metafields.my_fields.nombre_max) %}
             {state : false},
-            {state : false},
-            {state : false}
+          {% endfor %}
           ],
         birthStone_selected: [
-          {%for nombre_max in product.metafields.my_fields.nombre_de_prenom_max %}
-          {month: '', image:''},
-          // {month: '', image:''},
-          // {month: '', image:''}
+          {% for nombre_max in (1..product.metafields.my_fields.nombre_max) %}
+            {month: '', image:''},
           {% endfor %}
         ],
         prenoms_stones: [
-        {%for nombre_max in product.metafields.my_fields.nombre_de_prenom_max %}
-          {prenom: '', birthStone: ''},
-          // {prenom: '', birthStone: ''},
-          // {prenom: '', birthStone: ''}
-        {% endfor %}
+          {% for nombre_max in (1..product.metafields.my_fields.nombre_max) %}
+            {prenom: '', birthStone: ''},
+          {% endfor %}
         ],
         detailsCommande: [''],
   
@@ -515,9 +508,8 @@
         this.birthStone_selected[0].month = this.birthStones[0].month;
         this.birthStone_selected[0].image = this.birthStones[0].image;
 
-        for (let i = 0; i < 3; i++) {
-            this.birthStone_line_hide[i] = false;
-                    
+        for (let i = 0; i < {{ product.metafields.my_fields.nombre_max }}; i++) {
+            this.birthStone_line_hide[i] = false;                
         };
 
         console.log(this.birthStone_line_hide);
@@ -542,6 +534,12 @@
       },
       afficher_pierre(index) {
         this.isActive = !this.isActive;
+        this.prenoms_stones.forEach( (prenom_pierre, index) => {
+          if(prenom_pierre.prenom != '') {
+            let numero = index + 1;
+            detailsCommand.push(' Prenom' + numero + ' : ' + prenom_pierre.prenom + ' - Mois de naissance: ' + prenom_pierre.birthStone + ' // ')
+          }
+        });
         console.log(index);
       }, 
       register_stone(value, index) {
@@ -551,6 +549,12 @@
         // });
         this.birthStone_selected[index.index].month = value.birthStone.month;
         this.birthStone_selected[index.index].image = value.birthStone.image;
+        this.prenoms_stones.forEach( (prenom_pierre, index) => {
+          if(prenom_pierre.prenom != '') {
+            let numero = index + 1;
+            detailsCommand.push(' Prenom' + numero + ' : ' + prenom_pierre.prenom + ' - Mois de naissance: ' + prenom_pierre.birthStone + ' // ')
+          }
+        });
         console.log(this.active);
       },
       addToCart() {
