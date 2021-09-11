@@ -764,7 +764,7 @@ a.product__text {
 
 
 
-/*----------------------------------------------------------------*/
+/*-------------------------Product options and gift box---------------------------------------*/
 
 .combo-pierre {
   position: relative;
@@ -798,4 +798,35 @@ a.product__text {
 
 .affichage-false {
   display: none;
+}
+
+.image_List{
+  width: 54px;
+}
+
+.perle-vide {
+ position: absolute;
+  right: 30%;
+  z-index: -1;
+  width: 40px;
+}
+.gravure {
+  position: absolute;
+  top: 6%;
+  right: 15%;
+  font-weight: bold;
+  color: black;
+  font-size: 108px;
+}
+
+.input-name {
+  position: relative;
+}
+
+.gift-box_description {
+  display: flex;
+}
+
+.gift-box_image {
+  width: 100px;
 }

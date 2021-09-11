@@ -221,19 +221,33 @@
                 </select>
                 <div v-for="(nombre_total, index) in nombre_prenom">
                   <div>
-                    <Label :for="'prenom' + index" >Inserez votre prenom ${nombre_total}</Label>
+                    <div class="input-name">
+                      {% if product.metafields.my_fields.option_perle %}
+                        <Label :for="'prenom' + index" >Inserez votre prenom</Label>
+                        <span class="gravure"></span>
+                        <img class="perle-vide" src="https://cdn.shopify.com/s/files/1/0598/3721/9012/files/perle-vide.jpg?v=1631353344" alt="">
+                        <svg class="gravure" height="28px" width="150px" viewBox="0 0 350 350">
+                          <path id="curve" fill="transparent" d="M100,300 C198,352 468,348 499,291" />
+                          <text width="500">
+                            <textPath xlink:href="#curve">
+                              ${prenoms_stones[index].prenom}
+                            </textPath>
+                          </text>
+                        </svg>
+                      {% else %}
+                        <Label :for="'prenom' + index" >Inserez votre prenom ${nombre_total}</Label>
+                      {% endif %}
+                    </div>
                     <input type="text" v-bind:id="'prenom' + index" required v-model="prenoms_stones[index].prenom" :key="index">
                   </div>
+                  {% if product.metafields.my_fields.option_diamant %}
                   <div class="combo-pierre">
                     <Label for="pierre-de-naissance" >Choisir la pierre de naissance</Label>
                     <div>
-
                       <img @click="open(index)" v-if="birthStone_selected[index].image" :src="birthStone_selected[index].image">
                       <img @click="open(index)" v-else :src="birthStones[0].image">
-
                       <span @click="birthStone_line_hide[index] = !birthStone_line_hide[index]" v-if="birthStone_selected[index].month">${birthStone_selected[index].month}</span>
                       <span @click="birthStone_line_hide[index] = !birthStone_line_hide[index]" v-else="">${birthStones[0].month}</span>
-
                     </div>
                     <div  class=" list-stones_wrapper " v-if="birthStone_line_hide[index].state == true || birthStone_line_hide[index] == true" >
                       <div class="">
@@ -247,6 +261,29 @@
                     </div>
                     <hr>
                   </div>
+                  {% elsif product.metafields.my_fields.option_fleur %}
+                  <div class="combo-flower">
+                    <Label for="pierre-de-naissance" >Choisir la pierre de naissance</Label>
+                    <div>
+                      <img class="image_List" @click="open(index)" v-if="birthStone_selected[index].image" :src="birthStone_selected[index].image">
+                      <img class="image_List" @click="open(index)" v-else :src="birthFlowers[0].image">
+                      <span @click="birthStone_line_hide[index] = !birthStone_line_hide[index]" v-if="birthStone_selected[index].month">${birthStone_selected[index].month}</span>
+                      <span @click="birthStone_line_hide[index] = !birthStone_line_hide[index]" v-else="">${birthFlowers[0].month}</span>
+                    </div>
+                     <div  class=" list-stones_wrapper " v-if="birthStone_line_hide[index].state == true || birthStone_line_hide[index] == true" >
+                      <div class="">
+                        <ul class="list-stones">
+                          <li class="" v-for="(birthStone, i) in birthFlowers" :value="{birthStone}"  v-model="prenoms_stones[index].birthStone" @click="register_stone({birthStone}, {index})" >
+                            <img class="image_List" :src="birthStone.image" @click="birthStone_line_hide[index] = !birthStone_line_hide[index]">
+                            <p class="remove-margins" @click="birthStone_line_hide[index] = !birthStone_line_hide[index]">${birthStone.month}</p>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                    <hr>
+                  </div>
+                  {% else product.metafields.my_fields.option_perle %}
+                  {% endif %}
                 </div>
               {%- else -%}
                 <variant-selects class="no-js-hidden" data-section="{{ section.id }}" data-url="{{ product.url }}" {{ block.shopify_attributes }}>
@@ -274,12 +311,36 @@
                     </div>
                   {%- endfor -%}
 
+
                   <script type="application/json">
                     {{ product.variants | json }}
                   </script>
                 </variant-selects>
               {%- endif -%}
-            {%- endunless -%}
+            <div class="gif-box_wrapper">
+              <h3>Add Premium Package</h3>
+              <div class="gift-box_description">
+                <input type="checkbox" name="gift_box" id="gift_box">
+                <img class="gift-box_image" src="https://cdn.shopify.com/s/files/1/0598/3721/9012/files/boite-monprecieux.jpg?v=1631360424" alt="">
+                <div class="gift-box_text">
+                  <p>Premium Giftf Packaging - Gift box</p>
+                  <p>$4.95</p>
+                </div>
+              </div>
+            </div>
+            <div class="gif-box_wrapper">
+              <h3>Special Offer! Gift a second piece</h3>
+              <div class="gift-box_description">
+                <input type="checkbox" name="gift_box" id="gift_box">
+                <img class="gift-box_image" src="https://cdn.shopify.com/s/files/1/0598/3721/9012/files/boite-monprecieux.jpg?v=1631360424" alt="">
+                <div class="gift-box_text">
+                  <p>Premium Giftf Packaging - Gift box</p>
+                  <p>$4.95</p>
+                </div>
+              </div>
+            </div>
+            {{ product.metafields.my_fields.product_upsell }}
+          {%- endunless -%}
             <noscript class="product-form__noscript-wrapper-{{ section.id }}">
               <div class="product-form__input{% if product.has_only_default_variant %} hidden{% endif %}">
                 <label class="form__label" for="Variants-{{ section.id }}">{{ 'products.product.product_variants' | t }}</label>
@@ -455,10 +516,8 @@
           {% endfor %}
         ],
         fallback_product_image: "{{ featured_image | img_url: '500x', scale: 2 }}",
-        quantitee_max_prenom: [1,2,3,4,5,6,7],
         nombre_prenom: 1,
         show_birthstoneList: false,
-
         birthStones : [
           {month: 'January', image:'https://static.myka.com/option-image/f60d7fc1db2442729504be3ebcd8947b.png'},
           {month: 'February', image:'https://static.myka.com/option-image/d0309897266e4a5585d8056b417247e3.png'},
@@ -473,6 +532,20 @@
           {month: 'November', image:'https://static.myka.com/option-image/2c945eecb0e94f1db0c8b10dc82dfbab.png'},
           {month: 'December', image:'https://static.myka.com/option-image/d185da444bf14c8885889233bcc0945e.png'}
           ],
+        birthFlowers:  [
+          {month: 'January', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/janvier_-_perce_neige.png?v=1631303466'},
+          {month: 'February', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/fevrier_-_iris.png?v=1631303466'},
+          {month: 'March', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/mars_-_jonquille.png?v=1631303466'},
+          {month: 'April', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/avril_-_margueritte.png?v=1631303466'},
+          {month: 'May', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/mai_-aubepine.png?v=1631303466'},
+          {month: 'June', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/juin_-_rose.png?v=1631303466'},
+          {month: 'July', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/juillet_-_lotus.png?v=1631303466'},
+          {month: 'August', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/aout_-_coquelicot.png?v=1631303466'},
+          {month: 'September', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/septembre_-_gloire_du_matin.png?v=1631303466'},
+          {month: 'October', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/octobre_-_cosmos.png?v=1631303466'},
+          {month: 'November', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/novembre_-_chrysantheme.png?v=1631303466'},
+          {month: 'December', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/decembre_-_houx.png?v=1631303466'}
+        ],
         birthStone_line_hide: [
           {% for nombre_max in (1..product.metafields.my_fields.nombre_max) %}
             {state : false},
@@ -488,31 +561,47 @@
             {prenom: '', birthStone: ''},
           {% endfor %}
         ],
-        detailsCommande: [''],
+        detailsCommand: [''],
   
       }
     },
     computed: {
       current_variant() {
         return this.variants.find(variant => variant.id == this.current_variant_id);
-        console.log(this.birthStone_line_hide);
-
       }
-
     },
     created() {
-        axios.get("/products/{{ product.handle }}.js").then((results) => {
-           console.log(results);
-        });
 
+      //Gets the product of the page
+      axios.get("/products/{{ product.handle }}.js").then((results) => {
+         console.log(results);
+      });
+
+      {% if product.metafields.my_fields.option_diamant %}
         this.birthStone_selected[0].month = this.birthStones[0].month;
         this.birthStone_selected[0].image = this.birthStones[0].image;
+      {% elsif product.metafields.my_fields.option_fleur %}
+        this.birthStone_selected[0].month = this.birthFlowers[0].month;
+        this.birthStone_selected[0].image = this.birthFlowers[0].image;
+      {% else product.metafields.my_fields.option_perle %}
+        this.birthStone_selected[0].month = this.birthStones[0].month;
+        this.birthStone_selected[0].image = this.birthStones[0].image;
+      {% endif %}
 
-        for (let i = 0; i < {{ product.metafields.my_fields.nombre_max }}; i++) {
-            this.birthStone_line_hide[i] = false;                
-        };
+      for (let i = 0; i < {{ product.metafields.my_fields.nombre_max }}; i++) {
+          this.birthStone_line_hide[i] = false;
+      };
 
-        console.log(this.birthStone_line_hide);
+      //Gets the product upsell choosen in the dashboard admin
+      axios.get("/products.json?product_id={{ product.metafields.my_fields.product_upsell }}").then((results) => {
+        console.log(results);
+      });
+
+      const id = ( '{{ product.metafields.my_fields.product_upsell }}' );
+      const enc = window.btoa(id);
+      console.log(id);
+
+
       },
     methods: {
       variant_from_options() {
@@ -534,12 +623,6 @@
       },
       afficher_pierre(index) {
         this.isActive = !this.isActive;
-        this.prenoms_stones.forEach( (prenom_pierre, index) => {
-          if(prenom_pierre.prenom != '') {
-            let numero = index + 1;
-            detailsCommand.push(' Prenom' + numero + ' : ' + prenom_pierre.prenom + ' - Mois de naissance: ' + prenom_pierre.birthStone + ' // ')
-          }
-        });
         console.log(index);
       }, 
       register_stone(value, index) {
@@ -549,31 +632,24 @@
         // });
         this.birthStone_selected[index.index].month = value.birthStone.month;
         this.birthStone_selected[index.index].image = value.birthStone.image;
-        this.prenoms_stones.forEach( (prenom_pierre, index) => {
-          if(prenom_pierre.prenom != '') {
-            let numero = index + 1;
-            detailsCommand.push(' Prenom' + numero + ' : ' + prenom_pierre.prenom + ' - Mois de naissance: ' + prenom_pierre.birthStone + ' // ')
-          }
-        });
         console.log(this.active);
       },
       addToCart() {
         const prenoms = this.prenoms_stones.prenom;
         const birthStones = this.prenoms_stones.birthStone;
-        const detailsCommand = [];
 
         let data = {
             id: this.current_variant_id,
             quantity: 1,
             properties: {
-              Details: detailsCommand
+              Details: this.detailsCommand
             }
           };
 
         this.prenoms_stones.forEach( (prenom_pierre, index) => {
           if(prenom_pierre.prenom != '') {
             let numero = index + 1;
-            detailsCommand.push(' Prenom' + numero + ' : ' + prenom_pierre.prenom + ' - Mois de naissance: ' + prenom_pierre.birthStone + ' // ')
+            this.detailsCommand.push( prenom_pierre)
           }
         });
 
@@ -585,7 +661,6 @@
           .catch((error) => {
             console.log(error);
           });
-          
 
       },
       open(index){
