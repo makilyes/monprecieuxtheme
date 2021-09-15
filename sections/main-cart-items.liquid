@@ -287,6 +287,7 @@ const CartPage = {
     return {
       items: [],
       current_variant_id: [],
+      query: `{ shop { name } }`
     }
   },
   methods: {
@@ -294,9 +295,12 @@ const CartPage = {
       console.log('test');
       axios.get("/cart.js")
         .then((results) => {
-          console.log(results.data.items[0].properties.Details[1].prenom);
+          console.log(results);
       });
-    }
+
+
+  }
+
   } 
 }
 

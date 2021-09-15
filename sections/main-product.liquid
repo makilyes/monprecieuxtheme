@@ -318,27 +318,39 @@
                 </variant-selects>
               {%- endif -%}
             <div class="gif-box_wrapper">
-              <h3>Add Premium Package</h3>
+              <h3 class="title_upsell">Add Premium Package</h3>
               <div class="gift-box_description">
-                <input type="checkbox" name="gift_box" id="gift_box">
+                <input type="checkbox" name="gift_box" id="gift_box" v-model="checked_boite">
                 <img class="gift-box_image" src="https://cdn.shopify.com/s/files/1/0598/3721/9012/files/boite-monprecieux.jpg?v=1631360424" alt="">
                 <div class="gift-box_text">
-                  <p>Premium Giftf Packaging - Gift box</p>
-                  <p>$4.95</p>
+                  <p>${title_boite}</p>
+                  <p class="price_upsell">${price_boite} €</p>
                 </div>
               </div>
             </div>
             <div class="gif-box_wrapper">
-              <h3>Special Offer! Gift a second piece</h3>
+              <h3 class="title_upsell">Special Offer! Gift a second piece</h3>
               <div class="gift-box_description">
-                <input type="checkbox" name="gift_box" id="gift_box">
-                <img class="gift-box_image" src="https://cdn.shopify.com/s/files/1/0598/3721/9012/files/boite-monprecieux.jpg?v=1631360424" alt="">
+                <input type="checkbox" name="gift_box" id="gift_upsell" v-model="checked_upsell">
+                <img class="gift-box_image" :src="photo_upsell_src" alt="">
                 <div class="gift-box_text">
-                  <p>Premium Giftf Packaging - Gift box</p>
-                  <p>$4.95</p>
+                  <p>${title_upsell}</p>
+                  <p class="price_upsell">${price_upsell} €</p>
                 </div>
               </div>
+              <div class="options_upsell" v-if="checked_upsell">
+                <label for="name_choice_upsell">Write a name of your choice:</label>
+                <p>(Up to 10 characters)</p>
+                <input type="text" name="name_choice_upsell" id="name_choice_upsell">
+                <label for="size_upsell">Select adjustable chain length:</label>
+                <select name="size_upsell" id="size_upsell" form="size_upsell_form">
+                  <option value="35cm">35cm - 40cm</option>
+                  <option value="40cm">40cm - 45cm</option>
+                  <option value="50cm">45cm - 50cm</option>
+                </select>
+              </div>
             </div>
+            <button v-on:click="test">test</button>
             {{ product.metafields.my_fields.product_upsell }}
           {%- endunless -%}
             <noscript class="product-form__noscript-wrapper-{{ section.id }}">
@@ -365,7 +377,7 @@
           {%- when 'buy_buttons' -%}
             <div {{ block.shopify_attributes }}>
               <product-form class="product-form">
-                {%- form 'product', product, id: product_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form'  -%}
+                {%- form 'product', product, id: product_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
                   <input type="hidden" name="id" :value="current_variant_id">
                   <input type="hidden" name="quantity" value="1">
                   <input type="hidden" name="properties[Detail]" :value="detailsCommand"> 
@@ -488,7 +500,6 @@
 
 
 <script>
-// import {CartNotification} from '../assets/cart-notification.js'
 
   const ProductPage = { 
     name: "Product",
@@ -562,7 +573,17 @@
           {% endfor %}
         ],
         detailsCommand: [''],
-  
+        photo_upsell_src:'',
+        title_upsell:'',
+        price_upsell:'',
+        checked_upsell: false,
+        photo_boite_src:'',
+        title_boite:'',
+        price_boite:'',
+        checked_boite: false,
+        variants_boite:{},
+        variants_upsell: {},
+
       }
     },
     computed: {
@@ -593,14 +614,26 @@
       };
 
       //Gets the product upsell choosen in the dashboard admin
+      axios.get("/products/{{ product.metafields.my_fields.nom_produit_upsell }}.js").then((results) => {
+          console.log(results);
+          this.photo_upsell_src = results.data.featured_image;
+          this.title_upsell = results.data.title;
+          this.price_upsell = results.data.price/100;
+          this.variants_upsell = results.data.variants;
+      });
+
+      //Gets the gift box upsell (hard coded)
+      axios.get("/products/boite-a-bijoux-mon-precieux.js").then((results) => {
+          console.log(results);
+          this.photo_boite_src= results.data.featured_image;
+          this.title_boite= results.data.title;
+          this.price_boite= results.data.price/100;
+          this.variants_boite = results.data.variants;
+      });
+
       axios.get("/products.json?product_id={{ product.metafields.my_fields.product_upsell }}").then((results) => {
         console.log(results);
       });
-
-      const id = ( '{{ product.metafields.my_fields.product_upsell }}' );
-      const enc = window.btoa(id);
-      console.log(id);
-
 
       },
     methods: {
@@ -635,17 +668,88 @@
         console.log(this.active);
       },
       addToCart() {
-        const prenoms = this.prenoms_stones.prenom;
-        const birthStones = this.prenoms_stones.birthStone;
+        // const prenoms = this.prenoms_stones.prenom;
+        // const birthStones = this.prenoms_stones.birthStone;
+        // let options = [];
+        let data = {};
+        let variants_upsell;
 
-        let data = {
-            id: this.current_variant_id,
-            quantity: 1,
-            properties: {
-              Details: this.detailsCommand
-            }
+        
+
+        if (this.checked_upsell == true && this.checked_boite == true) {
+           data = {
+            items: [
+              {
+                id: this.current_variant_id,
+                quantity: 1,
+                properties: {
+                  Details: this.detailsCommand
+                },
+              },
+              {
+              id: 40542477910212,
+              quantity: 1,
+              },
+              {
+              id: 40542466113732,
+              quantity: 1,
+              },
+            ]
           };
+        }
 
+        if (this.checked_upsell == true) {
+           data = {
+            items: [
+              {
+                id: this.current_variant_id,
+                quantity: 1,
+                properties: {
+                  Details: this.detailsCommand
+                },
+              },
+              {
+              id: 40542466113732,
+              quantity: 1,
+              },
+            ]
+          };
+        }
+
+        if (this.checked_boite == true) {
+           data = {
+            items: [
+              {
+                id: this.current_variant_id,
+                quantity: 1,
+                properties: {
+                  Details: this.detailsCommand
+                },
+              },
+              {
+              id: this.variants_boite[0].id,
+              quantity: 1,
+              },
+            ]
+          };
+        }
+        
+        if (this.checked_upsell == false && this.checked_boite == false) {
+           data = {
+            items: [
+              {
+                id: this.current_variant_id,
+                quantity: 1,
+                properties: {
+                  Details: this.detailsCommand
+                },
+              },
+            ]
+          };
+        }
+      
+        
+        
         this.prenoms_stones.forEach( (prenom_pierre, index) => {
           if(prenom_pierre.prenom != '') {
             let numero = index + 1;
@@ -672,6 +776,12 @@
         };
         this.birthStone_line_hide[index]= !this.birthStone_line_hide[index];
         console.log(this.birthStone_line_hide);
+      },
+      test() {
+        console.log("test");
+        console.log(this.checked_boite);
+        console.log(this.checked_upsell);
+        console.log(this.variants_boite[0].id);
       }
     }
   }
