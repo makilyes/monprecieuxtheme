@@ -125,24 +125,24 @@
                 {{ 'products.product.quantity.label' | t }}
               </label>
 
-              <quantity-input class="quantity">
-                <button class="quantity__button no-js-hidden" name="minus" type="button">
-                  <span class="visually-hidden">{{ 'products.product.quantity.decrease' | t: product: product.title | escape }}</span>
-                  {% render 'icon-minus' %}
-                </button>
-                <input class="quantity__input"
-                    type="number"
-                    name="quantity"
-                    id="Quantity-{{ section.id }}"
-                    min="1"
-                    value="1"
-                    form="product-form-{{ section.id }}"
-                  >
-                <button class="quantity__button no-js-hidden" name="plus" type="button">
-                  <span class="visually-hidden">{{ 'products.product.quantity.increase' | t: product: product.title | escape }}</span>
-                  {% render 'icon-plus' %}
-                </button>
-              </quantity-input>
+              {% comment %}<quantity-input class="quantity">{% endcomment %}
+                {% comment %}<button class="quantity__button no-js-hidden" name="minus" type="button">{% endcomment %}
+                  {% comment %}<span class="visually-hidden">{{ 'products.product.quantity.decrease' | t: product: product.title | escape }}</span>{% endcomment %}
+                  {% comment %}{% render 'icon-minus' %}{% endcomment %}
+                {% comment %}</button>{% endcomment %}
+                {% comment %}<input class="quantity__input"{% endcomment %}
+                    {% comment %}type="number"{% endcomment %}
+                    {% comment %}name="quantity"{% endcomment %}
+                    {% comment %}id="Quantity-{{ section.id }}"{% endcomment %}
+                    {% comment %}min="1"{% endcomment %}
+                    {% comment %}value="1"{% endcomment %}
+                    {% comment %}form="product-form-{{ section.id }}"{% endcomment %}
+                  {% comment %}>{% endcomment %}
+                {% comment %}<button class="quantity__button no-js-hidden" name="plus" type="button">{% endcomment %}
+                  {% comment %}<span class="visually-hidden">{{ 'products.product.quantity.increase' | t: product: product.title | escape }}</span>{% endcomment %}
+                  {% comment %}{% render 'icon-plus' %}{% endcomment %}
+                {% comment %}</button>{% endcomment %}
+              {% comment %}</quantity-input>{% endcomment %}
             </div>
           {%- when 'popup' -%}
               <modal-opener class="product-popup-modal__opener no-js-hidden" data-modal="#PopupModal-{{ block.id }}" {{ block.shopify_attributes }}>
@@ -319,6 +319,8 @@
               {%- endif -%}
             <div class="gif-box_wrapper">
               <h3 class="title_upsell">Add Premium Package</h3>
+              <div class="description_wrapper">
+
               <div class="gift-box_description">
                 <input type="checkbox" name="gift_box" id="gift_box" v-model="checked_boite">
                 <img class="gift-box_image" src="https://cdn.shopify.com/s/files/1/0598/3721/9012/files/boite-monprecieux.jpg?v=1631360424" alt="">
@@ -327,30 +329,47 @@
                   <p class="price_upsell">${price_boite} €</p>
                 </div>
               </div>
+              </div>
             </div>
             <div class="gif-box_wrapper">
-              <h3 class="title_upsell">Special Offer! Gift a second piece</h3>
-              <div class="gift-box_description">
-                <input type="checkbox" name="gift_box" id="gift_upsell" v-model="checked_upsell">
-                <img class="gift-box_image" :src="photo_upsell_src" alt="">
-                <div class="gift-box_text">
-                  <p>${title_upsell}</p>
-                  <p class="price_upsell">${price_upsell} €</p>
+                <h3 class="title_upsell">Special Offer! Gift a second piece</h3>
+              <div class="description_wrapper">
+                <div class="gift-box_description">
+                  <input type="checkbox" name="gift_box" id="gift_upsell" v-model="checked_upsell">
+                  <img class="gift-box_image" :src="img_variant_upsell" alt="">
+                  <div class="gift-box_text">
+                    <p>${title_upsell}</p>
+                    <p class="price_upsell">${price_upsell} €</p>
+                  </div>
+                </div>
+
+                <div class="options_upsell" v-if="checked_upsell">
+                  <div v-for="option in options_upsell" class="product-form__input product-form__input--dropdown">
+                    <label class="form__label" for="Option-{{ section.id }}-{{ forloop.index0 }}">
+                      ${ option.name }
+                    </label>
+                    <div class="select">
+                      <select id="Option-{{ section.id }}-{{ forloop.index0 }}" v-model="option_choosen_upsell" @click="update_upsell">
+                        <option v-for="value in option.values"  >
+                          ${ value }
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <label class="label__choice-name" for="name_choice_upsell">Write a name of your choice:</label>
+                  <span class="label__max-letters">(Up to 10 characters)</span>
+                  <input type="text" name="name_choice_upsell" id="name_choice_upsell" v-model="name_choosen_upsell">
+                  <label class="label__size-upsell" for="size_upsell">Select adjustable chain length:</label>
+                  <select name="size_upsell" id="size_upsell" form="size_upsell_form" v-model="size_choosen_upsell">
+                    <option value="35cm-40cm">35cm - 40cm</option>
+                    <option value="40cm-45cm" selected>40cm - 45cm</option>
+                    <option value="45cm-50cm">45cm - 50cm</option>
+                  </select>
                 </div>
               </div>
-              <div class="options_upsell" v-if="checked_upsell">
-                <label for="name_choice_upsell">Write a name of your choice:</label>
-                <p>(Up to 10 characters)</p>
-                <input type="text" name="name_choice_upsell" id="name_choice_upsell">
-                <label for="size_upsell">Select adjustable chain length:</label>
-                <select name="size_upsell" id="size_upsell" form="size_upsell_form">
-                  <option value="35cm">35cm - 40cm</option>
-                  <option value="40cm">40cm - 45cm</option>
-                  <option value="50cm">45cm - 50cm</option>
-                </select>
-              </div>
             </div>
-            <button v-on:click="test">test</button>
+            <button v-on:click="addToCart">Ajout Panier</button>
+            <button v-on:click="test">Test</button>
             {{ product.metafields.my_fields.product_upsell }}
           {%- endunless -%}
             <noscript class="product-form__noscript-wrapper-{{ section.id }}">
@@ -378,7 +397,7 @@
             <div {{ block.shopify_attributes }}>
               <product-form class="product-form">
                 {%- form 'product', product, id: product_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
-                  <input type="hidden" name="id" :value="current_variant_id">
+                  {% comment %}<input type="hidden" name="id" :value="current_variant_id">{% endcomment %}
                   <input type="hidden" name="quantity" value="1">
                   <input type="hidden" name="properties[Detail]" :value="detailsCommand"> 
 
@@ -577,12 +596,18 @@
         title_upsell:'',
         price_upsell:'',
         checked_upsell: false,
+        variants_upsell: {},
+        options_upsell: {},
+        name_choosen_upsell:'',
+        size_choosen_upsell:'',
+        option_choosen_upsell:'',
+        current_variant_id_upsell:'',
+        img_variant_upsell:'',
         photo_boite_src:'',
         title_boite:'',
         price_boite:'',
         checked_boite: false,
         variants_boite:{},
-        variants_upsell: {},
 
       }
     },
@@ -616,10 +641,11 @@
       //Gets the product upsell choosen in the dashboard admin
       axios.get("/products/{{ product.metafields.my_fields.nom_produit_upsell }}.js").then((results) => {
           console.log(results);
-          this.photo_upsell_src = results.data.featured_image;
+          this.img_variant_upsell = results.data.featured_image;
           this.title_upsell = results.data.title;
           this.price_upsell = results.data.price/100;
           this.variants_upsell = results.data.variants;
+        this.options_upsell = results.data.options;
       });
 
       //Gets the gift box upsell (hard coded)
@@ -667,6 +693,29 @@
         this.birthStone_selected[index.index].image = value.birthStone.image;
         console.log(this.active);
       },
+      update_upsell() {
+        const variant = this.variants_upsell.find((variant) => {
+
+          let match = true;
+          if(variant.option1 != '') {
+            return variant.option1 == this.option_choosen_upsell
+          }
+
+          if(match && variant.option2 != '') {
+            return variant.option2 == this.option_choosen_upsell
+          }
+          if(match && variant.option3 != '') {
+            return variant.option3 == this.option_choosen_upsell
+          }
+          return variant;
+        })
+        this.current_variant_id_upsell = variant.id;
+        this.img_variant_upsell = variant.featured_image.src;
+
+        console.log(variant);
+        console.log(this.current_variant_id_upsell);
+        console.log(this.img_variant_upsell);
+        },
       addToCart() {
         // const prenoms = this.prenoms_stones.prenom;
         // const birthStones = this.prenoms_stones.birthStone;
@@ -676,7 +725,7 @@
 
         
 
-        if (this.checked_upsell == true && this.checked_boite == true) {
+        if (this.checked_upsell === true && this.checked_boite === true) {
            data = {
             items: [
               {
@@ -691,14 +740,19 @@
               quantity: 1,
               },
               {
-              id: 40542466113732,
+              id: this.current_variant_id_upsell,
               quantity: 1,
+                properties: {
+                  Details: {
+                    name: this.name_choosen_upsell,
+                    size: this.size_choosen_upsell,
+                    color: this.option_choosen_upsell,
+                  }
+                }
               },
             ]
           };
-        }
-
-        if (this.checked_upsell == true) {
+        } else if (this.checked_upsell === true) {
            data = {
             items: [
               {
@@ -709,14 +763,19 @@
                 },
               },
               {
-              id: 40542466113732,
+              id: this.current_variant_id_upsell,
               quantity: 1,
+              properties: {
+                Details: {
+                  name: this.name_choosen_upsell,
+                  size: this.size_choosen_upsell,
+                  color: this.option_choosen_upsell,
+                }
+              }
               },
             ]
           };
-        }
-
-        if (this.checked_boite == true) {
+        } else if (this.checked_boite === true) {
            data = {
             items: [
               {
@@ -732,9 +791,7 @@
               },
             ]
           };
-        }
-        
-        if (this.checked_upsell == false && this.checked_boite == false) {
+        } else {
            data = {
             items: [
               {
@@ -779,9 +836,16 @@
       },
       test() {
         console.log("test");
-        console.log(this.checked_boite);
-        console.log(this.checked_upsell);
-        console.log(this.variants_boite[0].id);
+        console.log(this.variants_upsell);
+        console.log(this.options_upsell);
+        // console.log(this.option_choosen_upsell);
+        // console.log(this.current_variant_id_upsell);
+        // console.log(this.name_choosen_upsell);
+        // console.log(this.size_choosen_upsell);
+        // console.log(this.checked_boite);
+        // console.log(this.checked_upsell);
+        // console.log(this.variants_boite[0].id);
+
       }
     }
   }

@@ -823,11 +823,20 @@ a.product__text {
   position: relative;
 }
 
+.gif-box_wrapper {
+  border: #575757 1px solid;
+}
+
+.description_wrapper {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
 .gift-box_description {
   display: flex;
   margin-left: 0 0 4%;
-  border: 1px solid grey;
-  border-top: none;
+  /*border: 1px solid grey;*/
+  /*border-top: none;*/
   align-items: center;
 }
 
@@ -844,9 +853,7 @@ a.product__text {
 
 .title_upsell {
   background-color: #FEECE0;
-  border-top: 1px solid grey;
-  border-left: 1px solid grey;
-  border-right: 1px solid grey;
+  border-bottom: 1px solid grey;
   margin: 0;
   padding: 4% 0;
   text-align: center;
@@ -854,4 +861,24 @@ a.product__text {
 
 .price_upsell {
   font-weight: bold;
+}
+
+.options_upsell {
+  margin-left: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.label__choice-name {
+
+}
+
+.label__max-letters {
+  font-size: 12px;
+  font-style: italic;
+}
+
+.label__size-upsell {
+  margin-top: 17px;
+  margin-bottom: 3px;
 }
