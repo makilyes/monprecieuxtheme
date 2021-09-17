@@ -216,9 +216,15 @@
                 <label for="nombrePrenom">
                   Nombre de Prenom
                 </label>
-                <select id="nombrePrenom" v-model.number="nombre_prenom">
+                {% if product.metafields.my_fields.nombre_min != 0 %}
+                    <select id="nombrePrenom" v-model.number="nombre_prenom" @click="test">
+                        <option v-for="{{ product.metafields.my_fields.nombre_min }}" @click="test">{{ product.metafields.my_fields.nombre_min }}</option>
+                    </select>
+                {% else %}
+                  <select id="nombrePrenom" v-model.number="nombre_prenom">
                     <option v-for="nombre in {{ product.metafields.my_fields.nombre_max }}" >${nombre}</option>
-                </select>
+                  </select>
+                 {% endif %}
                 <div v-for="(nombre_total, index) in nombre_prenom">
                   <div>
                     <div class="input-name">
@@ -322,7 +328,7 @@
               <div class="description_wrapper">
 
               <div class="gift-box_description">
-                <input type="checkbox" name="gift_box" id="gift_box" v-model="checked_boite" @click="subtotal_order">
+                <input type="checkbox" name="gift_box" id="gift_box" v-model="checked_boite" @click="subtotal_order_box">
                 <img class="gift-box_image" src="https://cdn.shopify.com/s/files/1/0598/3721/9012/files/boite-monprecieux.jpg?v=1631360424" alt="">
                 <div class="gift-box_text">
                   <p>${title_boite}</p>
@@ -335,7 +341,7 @@
                 <h3 class="title_upsell">Special Offer! Gift a second piece</h3>
               <div class="description_wrapper">
                 <div class="gift-box_description">
-                  <input type="checkbox" name="gift_box" id="gift_upsell" v-model="checked_upsell" @click="subtotal_order">
+                  <input type="checkbox" name="gift_box" id="gift_upsell" v-model="checked_upsell" @click="subtotal_order_upsell">
                   <img class="gift-box_image" :src="img_variant_upsell" alt="">
                   <div class="gift-box_text">
                     <p>${title_upsell}</p>
@@ -368,9 +374,13 @@
                 </div>
               </div>
             </div>
-            <p>Subtotal : ${subtotal} €</p>
-            <button v-on:click="addToCart">Ajout Panier</button>
-            <button v-on:click="test">Test</button>
+            <div class="subtotal_wrapper">
+              <p>Subtotal : </p>
+              <span>${subtotal} €</span>
+            </div>
+            <button v-on:click="addToCart" class="product-form__submit button button--full-width {% if block.settings.show_dynamic_checkout and product.selling_plan_groups == empty %}button--secondary{% else %}button--primary{% endif %}">Ajout Panier</button>
+            {% comment %}<button v-on:click="test">Test</button>{% endcomment %}
+
             {{ product.metafields.my_fields.product_upsell }}
           {%- endunless -%}
             <noscript class="product-form__noscript-wrapper-{{ section.id }}">
@@ -400,7 +410,7 @@
                 {%- form 'product', product, id: product_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
                   {% comment %}<input type="hidden" name="id" :value="current_variant_id">{% endcomment %}
                   <input type="hidden" name="quantity" value="1">
-                  <input type="hidden" name="properties[Detail]" :value="detailsCommand"> 
+                  <input type="hidden" name="properties[Detail]" :value="detailsCommand">
 
                   <div class="product-form__buttons">
                     <button
@@ -578,19 +588,37 @@
           {month: 'December', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/decembre_-_houx.png?v=1631303466'}
         ],
         birthStone_line_hide: [
-          {% for nombre_max in (1..product.metafields.my_fields.nombre_max) %}
-            {state : false},
-          {% endfor %}
+          {% if product.metafields.my_fields.nombre_min != 0 %}
+            {% for nombre_max in (1..product.metafields.my_fields.nombre_min) %}
+              {state : false},
+            {% endfor %}
+          {% else %}
+            {% for nombre_max in (1..product.metafields.my_fields.nombre_max) %}
+              {state : false},
+            {% endfor %}
+          {% endif %}
           ],
         birthStone_selected: [
-          {% for nombre_max in (1..product.metafields.my_fields.nombre_max) %}
+          {% if product.metafields.my_fields.nombre_min != 0 %}
+            {% for nombre_max in (1..product.metafields.my_fields.nombre_min) %}
+              {month: '', image:''},
+            {% endfor %}
+          {% else %}
+            {% for nombre_max in (1..product.metafields.my_fields.nombre_max) %}
             {month: '', image:''},
-          {% endfor %}
+            {% endfor %}
+          {% endif %}
         ],
         prenoms_stones: [
-          {% for nombre_max in (1..product.metafields.my_fields.nombre_max) %}
+          {% if product.metafields.my_fields.nombre_min != 0 %}
+            {% for nombre_max in (1..product.metafields.my_fields.nombre_min) %}
+              {prenom: '', birthStone: ''},
+            {% endfor %}
+          {% else %}
+            {% for nombre_max in (1..product.metafields.my_fields.nombre_max) %}
             {prenom: '', birthStone: ''},
-          {% endfor %}
+            {% endfor %}
+          {% endif %}
         ],
         detailsCommand: [''],
         photo_upsell_src:'',
@@ -648,6 +676,7 @@
           this.price_upsell = results.data.price/100;
           this.variants_upsell = results.data.variants;
         this.options_upsell = results.data.options;
+        console.log(this.price_upsell);
       });
 
       //Gets the gift box upsell (hard coded)
@@ -657,6 +686,7 @@
           this.title_boite= results.data.title;
           this.price_boite= results.data.price/100;
           this.variants_boite = results.data.variants;
+          console.log(this.price_boite);
       });
 
       axios.get("/products.json?product_id={{ product.metafields.my_fields.product_upsell }}").then((results) => {
@@ -841,37 +871,37 @@
 
       test() {
         console.log("test");
-        console.log(subtotal);
-        // console.log(this.variants_upsell);
-        // console.log(this.options_upsell);
-        {% comment %}console.log("{{ product.selected_or_first_available_variant.price | money }}");{% endcomment %}
-        // console.log(this.option_choosen_upsell);
-        // console.log(this.current_variant_id_upsell);
-        // console.log(this.name_choosen_upsell);
-        // console.log(this.size_choosen_upsell);
-        // console.log(this.checked_boite);
-        // console.log(this.checked_upsell);
-        // console.log(this.variants_boite[0].id);
+        console.log(this.nombre_prenom)
 
       },
 
-      subtotal_order() {
-         let subtotal = 0;
-        let price_variant_number = "{{ product.selected_or_first_available_variant.price }}"/100;
+      subtotal_order_box() {
 
-        subtotal +=  price_variant_number;
+        this.checked_boite = !this.checked_boite;
 
-        if ( this.checked_boite == false ) {
-          subtotal+= this.price_boite;
+        if ( this.checked_boite == true ) {
+          this.subtotal+= (this.price_boite) ;
+        } else if(this.checked_boite == false) {
+          this.subtotal-= (this.price_boite);
         }
-        if (this.checked_upsell == false) {
-          subtotal += this.price_upsell
-        }
-        this.subtotal = subtotal;
+
+
         console.log(this.checked_boite);
-        console.log(this.checked_upsell);
-        console.log(subtotal);
+        console.log(this.subtotal);
       },
+
+      subtotal_order_upsell() {
+
+        this.checked_upsell = !this.checked_upsell;
+
+        if (this.checked_upsell == true) {
+          this.subtotal += (this.price_upsell);
+        } else if(this.checked_upsell == false) {
+          this.subtotal-= (this.price_upsell);
+        }
+        console.log(this.checked_upsell);
+        console.log(this.subtotal);
+      }
 
     }
   }
