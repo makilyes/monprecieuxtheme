@@ -69,7 +69,6 @@
     <div class="product__info-wrapper grid__item">
       <div id="ProductInfo-{{ section.id }}" class="product__info-container{% if section.settings.enable_sticky_info %} product__info-container--sticky{% endif %}">
         {%- assign product_form_id = 'product-form-' | append: section.id -%}
-
         {%- for block in section.blocks -%}
           {%- case block.type -%}
           {%- when '@app' -%}
@@ -239,21 +238,6 @@
                       </div>
                     </div>
                     <hr>
-                    <!--<select id="pierre-de-naissance" v-model="pierre_de_naissance"> -->
-                      <!-- pierre_de_naissance: "Janvier - Grenat" -->
-                      <!-- <option >Janvier - Grenat</option>
-                      <option >Fevrier - Amethyste</option>
-                      <option >Mars - Algue Marine</option>
-                      <option >Avril - Cristal</option>
-                      <option >Mai - Emeraude</option>
-                      <option >Juin - Amethyste Clair</option>
-                      <option >Juillet - Rubis</option>
-                      <option >Aout - Peridot</option>
-                      <option >Septembre - Saphir</option>
-                      <option >Octobre - Quartz Rose</option>
-                      <option >Novembre - Topaze Jaune</option>
-                      <option >Decembre - Topaze Bleu</option>
-                    </select> -->
                   </div>
                 </div>
                 <button>Voir details commande</button>
@@ -280,14 +264,12 @@
                       </div>
                     </div>
                   {%- endfor -%}
-
                   <script type="application/json">
                     {{ product.variants | json }}
                   </script>
                 </variant-selects>
               {%- endif -%}
             {%- endunless -%}
-
             <noscript class="product-form__noscript-wrapper-{{ section.id }}">
               <div class="product-form__input{% if product.has_only_default_variant %} hidden{% endif %}">
                 <label class="form__label" for="Variants-{{ section.id }}">{{ 'products.product.product_variants' | t }}</label>
@@ -355,7 +337,6 @@
                 </template>
               </pickup-availability>
             </div>
-
             <script src="{{ 'pickup-availability.js' | asset_url }}" defer="defer"></script>
           {%- when 'rating' -%}
             {%- if product.metafields.reviews.rating.value != blank -%}
@@ -384,7 +365,6 @@
       </div>
     </div>
   </div>
-
   <product-modal id="ProductModal-{{ section.id }}" class="product-media-modal media-modal">
     <div class="product-media-modal__dialog" role="dialog" aria-label="{{ 'products.modal.label' | t }}" aria-modal="true" tabindex="-1">
       <button id="ModalClose-{{ section.id }}" type="button" class="product-media-modal__toggle" aria-label="{{ 'accessibility.close' | t }}">{% render 'icon-close' %}</button>
@@ -413,7 +393,6 @@
       </div>
     </div>
   </product-modal>
-
   {% assign popups = section.blocks | where: "type", "popup" %}
   {%- for block in popups -%}
     <modal-dialog id="PopupModal-{{ block.id }}" class="product-popup-modal" {{ block.shopify_attributes }}>
@@ -427,7 +406,6 @@
     </modal-dialog>
   {%- endfor -%}
 </section>
-
 
 
 <script>
@@ -502,10 +480,16 @@
         axios.get("/products/{{ product.handle }}.js").then((results) => {
           console.log(results);
         });
+        console.log("Apres le resultat de la requete voici les variants");
+        console.log(this.variants);
       },
     methods: {
       afficher_pierre() {
         this.isActive = !this.isActive;
+        console.log("voir quand je clique sur afficher pierre")
+        console.log(this.current_variant_id);
+        console.log(this.variant_selection);
+        console.log("{{ product.selected_or_first_available_variant.id }}");
       }, 
       register_stone(value, index) {
         this.prenoms_stones[index.index].birthStone = value.birthStone.month;
