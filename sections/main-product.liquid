@@ -70,7 +70,6 @@
     <div class="product__info-wrapper grid__item">
       <div id="ProductInfo-{{ section.id }}" class="product__info-container{% if section.settings.enable_sticky_info %} product__info-container--sticky{% endif %}">
         {%- assign product_form_id = 'product-form-' | append: section.id -%}
-
         {%- for block in section.blocks -%}
           {%- case block.type -%}
           {%- when '@app' -%}
@@ -317,12 +316,12 @@
                     </div>
                   {%- endfor -%}
 
-
                   <script type="application/json">
                     {{ product.variants | json }}
                   </script>
                 </variant-selects>
               {%- endif -%}
+
             <div class="gif-box_wrapper">
               <h3 class="title_upsell">Add Premium Package</h3>
               <div class="description_wrapper">
@@ -454,7 +453,6 @@
                 </template>
               </pickup-availability>
             </div>
-
             <script src="{{ 'pickup-availability.js' | asset_url }}" defer="defer"></script>
           {%- when 'rating' -%}
             {%- if product.metafields.reviews.rating.value != blank -%}
@@ -483,7 +481,6 @@
       </div>
     </div>
   </div>
-
   <product-modal id="ProductModal-{{ section.id }}" class="product-media-modal media-modal">
     <div class="product-media-modal__dialog" role="dialog" aria-label="{{ 'products.modal.label' | t }}" aria-modal="true" tabindex="-1">
       <button id="ModalClose-{{ section.id }}" type="button" class="product-media-modal__toggle" aria-label="{{ 'accessibility.close' | t }}">{% render 'icon-close' %}</button>
@@ -512,7 +509,6 @@
       </div>
     </div>
   </product-modal>
-
   {% assign popups = section.blocks | where: "type", "popup" %}
   {%- for block in popups -%}
     <modal-dialog id="PopupModal-{{ block.id }}" class="product-popup-modal" {{ block.shopify_attributes }}>
@@ -526,7 +522,6 @@
     </modal-dialog>
   {%- endfor -%}
 </section>
-
 
 
 <script>
@@ -671,6 +666,7 @@
       //Gets the product upsell choosen in the dashboard admin
       axios.get("/products/{{ product.metafields.my_fields.nom_produit_upsell }}.js").then((results) => {
           console.log(results);
+
           this.img_variant_upsell = results.data.featured_image;
           this.title_upsell = results.data.title;
           this.price_upsell = results.data.price/100;
@@ -714,8 +710,9 @@
       },
       afficher_pierre(index) {
         this.isActive = !this.isActive;
+
         console.log(index);
-      }, 
+      },
       register_stone(value, index) {
         this.prenoms_stones[index.index].birthStone = value.birthStone.month;
         // thi.birthStone_selected.map( item => {
