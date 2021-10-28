@@ -5,7 +5,7 @@
 {{ 'component-rte.css' | asset_url | stylesheet_tag }}
 {{ 'component-slider.css' | asset_url | stylesheet_tag }}
 {{ 'component-rating.css' | asset_url | stylesheet_tag }}
-
+{{ 'component-loading-overlay.css' | asset_url | stylesheet_tag }}
 
 <link rel="stylesheet" href="{{ 'component-deferred-media.css' | asset_url }}" media="print" onload="this.media='all'">
 
@@ -18,7 +18,7 @@
   <link id="ModelViewerOverride" rel="stylesheet" href="{{ 'component-model-viewer-ui.css' | asset_url }}" media="print" onload="this.media='all'">
 {%- endif -%}
 
-<section id="productPage" class="page-width">
+<section class="page-width">
   <div class="product grid grid--1-col {% if product.media.size > 0 %}grid--2-col-tablet{% else %}product--no-media{% endif %}">
     <div class="grid__item product__media-wrapper">
       <slider-component class="slider-mobile-gutter">
@@ -70,6 +70,7 @@
     <div class="product__info-wrapper grid__item">
       <div id="ProductInfo-{{ section.id }}" class="product__info-container{% if section.settings.enable_sticky_info %} product__info-container--sticky{% endif %}">
         {%- assign product_form_id = 'product-form-' | append: section.id -%}
+
         {%- for block in section.blocks -%}
           {%- case block.type -%}
           {%- when '@app' -%}
@@ -83,9 +84,19 @@
               {{ product.title | escape }}
             </h1>
           {%- when 'price' -%}
-            <div class="no-js-hidden" id="price-{{ section.id }}" {{ block.shopify_attributes }}>
+            <div class="no-js-hidden" id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
               {%- render 'price', product: product, use_variant: true, show_badges: true, price_class: 'price--large' -%}
             </div>
+            {%- if shop.taxes_included or shop.shipping_policy.body != blank -%}
+              <div class="product__tax caption rte">
+                {%- if shop.taxes_included -%}
+                  {{ 'products.product.include_taxes' | t }}
+                {%- endif -%}
+                {%- if shop.shipping_policy.body != blank -%}
+                  {{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}
+                {%- endif -%}
+              </div>
+            {%- endif -%}
             <div {{ block.shopify_attributes }}>
               {%- form 'product', product, id: 'product-form-installment', class: 'installment caption-large' -%}
                 <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
@@ -102,7 +113,7 @@
             {{ block.settings.custom_liquid }}
           {%- when 'collapsible_tab' -%}
             <div class="product__accordion accordion" {{ block.shopify_attributes }}>
-              <details>
+              <details id="Details-{{ block.id }}-{{ section.id }}">
                 <summary>
                   <div class="summary__title">
                     {% render 'icon-accordion', icon: block.settings.icon %}
@@ -112,7 +123,7 @@
                   </div>
                   {% render 'icon-caret' %}
                 </summary>
-                <div class="accordion__content rte">
+                <div class="accordion__content rte" id="ProductAccordion-{{ block.id }}-{{ section.id }}">
                   {{ block.settings.content }}
                   {{ block.settings.page.content }}
                 </div>
@@ -121,27 +132,27 @@
           {%- when 'quantity_selector' -%}
             <div class="product-form__input product-form__quantity" {{ block.shopify_attributes }}>
               <label class="form__label" for="Quantity-{{ section.id }}">
-                {% comment %}{{ 'products.product.quantity.label' | t }}{% endcomment %}
+                {{ 'products.product.quantity.label' | t }}
               </label>
 
-              {% comment %}<quantity-input class="quantity">{% endcomment %}
-                {% comment %}<button class="quantity__button no-js-hidden" name="minus" type="button">{% endcomment %}
-                  {% comment %}<span class="visually-hidden">{{ 'products.product.quantity.decrease' | t: product: product.title | escape }}</span>{% endcomment %}
-                  {% comment %}{% render 'icon-minus' %}{% endcomment %}
-                {% comment %}</button>{% endcomment %}
-                {% comment %}<input class="quantity__input"{% endcomment %}
-                    {% comment %}type="number"{% endcomment %}
-                    {% comment %}name="quantity"{% endcomment %}
-                    {% comment %}id="Quantity-{{ section.id }}"{% endcomment %}
-                    {% comment %}min="1"{% endcomment %}
-                    {% comment %}value="1"{% endcomment %}
-                    {% comment %}form="product-form-{{ section.id }}"{% endcomment %}
-                  {% comment %}>{% endcomment %}
-                {% comment %}<button class="quantity__button no-js-hidden" name="plus" type="button">{% endcomment %}
-                  {% comment %}<span class="visually-hidden">{{ 'products.product.quantity.increase' | t: product: product.title | escape }}</span>{% endcomment %}
-                  {% comment %}{% render 'icon-plus' %}{% endcomment %}
-                {% comment %}</button>{% endcomment %}
-              {% comment %}</quantity-input>{% endcomment %}
+              <quantity-input class="quantity">
+                <button class="quantity__button no-js-hidden" name="minus" type="button">
+                  <span class="visually-hidden">{{ 'products.product.quantity.decrease' | t: product: product.title | escape }}</span>
+                  {% render 'icon-minus' %}
+                </button>
+                <input class="quantity__input"
+                    type="number"
+                    name="quantity"
+                    id="Quantity-{{ section.id }}"
+                    min="1"
+                    value="1"
+                    form="{{ product_form_id }}"
+                  >
+                <button class="quantity__button no-js-hidden" name="plus" type="button">
+                  <span class="visually-hidden">{{ 'products.product.quantity.increase' | t: product: product.title | escape }}</span>
+                  {% render 'icon-plus' %}
+                </button>
+              </quantity-input>
             </div>
           {%- when 'popup' -%}
               <modal-opener class="product-popup-modal__opener no-js-hidden" data-modal="#PopupModal-{{ block.id }}" {{ block.shopify_attributes }}>
@@ -149,12 +160,12 @@
               </modal-opener>
               <a href="{{ block.settings.page.url }}" class="product-popup-modal__button link no-js">{{ block.settings.text }}</a>
           {%- when 'share' -%}
-            <share-button class="share-button" {{ block.shopify_attributes }}>
+            <share-button id="Share-{{ section.id }}" class="share-button" {{ block.shopify_attributes }}>
               <button class="share-button__button hidden">
                 {% render 'icon-share' %}
                 {{ block.settings.share_label | escape }}
               </button>
-              <details>
+              <details id="Details-{{ block.id }}-{{ section.id }}">
                 <summary class="share-button__button">
                   {% render 'icon-share' %}
                   {{ block.settings.share_label | escape }}
@@ -166,7 +177,7 @@
                     <input type="text"
                           class="field__input"
                           id="url"
-                          value="{{ shop.url | append: product.url }}"
+                          value="{{ product.selected_variant.url | default: product.url | prepend: shop.url }}"
                           placeholder="{{ 'general.share.share_url' | t }}"
                           onclick="this.select();"
                           readonly
@@ -188,21 +199,18 @@
           {%- when 'variant_picker' -%}
             {%- unless product.has_only_default_variant -%}
               {%- if block.settings.picker_type == 'button' -%}
-                <variant-radios class="no-js-hidden" data-section="{{ section.id }}" data-url="{{ product.url }}" {{ block.shopify_attributes }} >
+                <variant-radios class="no-js-hidden" data-section="{{ section.id }}" data-url="{{ product.url }}" {{ block.shopify_attributes }}>
                   {%- for option in product.options_with_values -%}
                       <fieldset class="js product-form__input">
                         <legend class="form__label">{{ option.name }}</legend>
                         {%- for value in option.values -%}
-                          <input type="radio" id="{{ section.id }}-{{ option.name }}-{{ forloop.index0 }}"
+                          <input type="radio" id="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}"
                                 name="{{ option.name }}"
                                 value="{{ value | escape }}"
-                                v-model="variant_selection.option{{ option.position }}"
-                                form="product-form-{{ section.id }}"
+                                form="{{ product_form_id }}"
                                 {% if option.selected_value == value %}checked{% endif %}
-                                @change="variant_from_options"
-                                :value="current_variant_id"
                           >
-                          <label for="{{ section.id }}-{{ option.name }}-{{ forloop.index0 }}">
+                          <label for="{{ section.id }}-{{ option.position }}-{{ forloop.index0 }}">
                             {{ value }}
                           </label>
                         {%- endfor -%}
@@ -212,84 +220,6 @@
                     {{ product.variants | json }}
                   </script>
                 </variant-radios>
-                <label for="nombrePrenom">
-                  Nombre de Prenom
-                </label>
-                {% if product.metafields.my_fields.nombre_min != 0 %}
-                    <select id="nombrePrenom" v-model.number="nombre_prenom" >
-                        <option v-for="{{ product.metafields.my_fields.nombre_min }}" v-html="{{ product.metafields.my_fields.nombre_min }}" ></option>
-                    </select>
-                {% else %}
-                  <select id="nombrePrenom" v-model.number="nombre_prenom">
-                    <option v-for="nombre in {{ product.metafields.my_fields.nombre_max }}" >${nombre}</option>
-                  </select>
-                 {% endif %}
-                <div v-for="(nombre_total, index) in nombre_prenom">
-                  <div>
-                    <div class="input-name">
-                      {% if product.metafields.my_fields.option_perle %}
-                        <Label :for="'prenom' + index" >Inserez votre prenom</Label>
-                        <span class="gravure"></span>
-                        <img class="perle-vide" src="https://cdn.shopify.com/s/files/1/0598/3721/9012/files/perle-vide.jpg?v=1631353344" alt="">
-                        <svg class="gravure" height="28px" width="150px" viewBox="0 0 350 350">
-                          <path id="curve" fill="transparent" d="M100,300 C198,352 468,348 499,291" />
-                          <text width="500">
-                            <textPath xlink:href="#curve">
-                              ${prenoms_stones[index].prenom}
-                            </textPath>
-                          </text>
-                        </svg>
-                      {% else %}
-                        <Label :for="'prenom' + index" >Inserez votre prenom ${nombre_total}</Label>
-                      {% endif %}
-                    </div>
-                    <input type="text" v-bind:id="'prenom' + index" required v-model="prenoms_stones[index].prenom" :key="index">
-                  </div>
-                  {% if product.metafields.my_fields.option_diamant %}
-                  <div class="combo-pierre">
-                    <Label for="pierre-de-naissance" >Choisir la pierre de naissance</Label>
-                    <div>
-                      <img @click="open(index)" v-if="birthStone_selected[index].image" :src="birthStone_selected[index].image">
-                      <img @click="open(index)" v-else :src="birthStones[0].image">
-                      <span @click="birthStone_line_hide[index] = !birthStone_line_hide[index]" v-if="birthStone_selected[index].month">${birthStone_selected[index].month}</span>
-                      <span @click="birthStone_line_hide[index] = !birthStone_line_hide[index]" v-else="">${birthStones[0].month}</span>
-                    </div>
-                    <div  class=" list-stones_wrapper " v-if="birthStone_line_hide[index].state == true || birthStone_line_hide[index] == true" >
-                      <div class="">
-                        <ul class="list-stones">
-                          <li class="" v-for="(birthStone, i) in birthStones" :value="{birthStone}"  v-model="prenoms_stones[index].birthStone" @click="register_stone({birthStone}, {index})" >
-                            <img :src="birthStone.image" @click="birthStone_line_hide[index] = !birthStone_line_hide[index]">
-                            <p class="remove-margins" @click="birthStone_line_hide[index] = !birthStone_line_hide[index]">${birthStone.month}</p>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                    <hr>
-                  </div>
-                  {% elsif product.metafields.my_fields.option_fleur %}
-                  <div class="combo-flower">
-                    <Label for="pierre-de-naissance" >Choisir la pierre de naissance</Label>
-                    <div>
-                      <img class="image_List" @click="open(index)" v-if="birthStone_selected[index].image" :src="birthStone_selected[index].image">
-                      <img class="image_List" @click="open(index)" v-else :src="birthFlowers[0].image">
-                      <span @click="birthStone_line_hide[index] = !birthStone_line_hide[index]" v-if="birthStone_selected[index].month">${birthStone_selected[index].month}</span>
-                      <span @click="birthStone_line_hide[index] = !birthStone_line_hide[index]" v-else="">${birthFlowers[0].month}</span>
-                    </div>
-                     <div  class=" list-stones_wrapper " v-if="birthStone_line_hide[index].state == true || birthStone_line_hide[index] == true" >
-                      <div class="">
-                        <ul class="list-stones">
-                          <li class="" v-for="(birthStone, i) in birthFlowers" :value="{birthStone}"  v-model="prenoms_stones[index].birthStone" @click="register_stone({birthStone}, {index})" >
-                            <img class="image_List" :src="birthStone.image" @click="birthStone_line_hide[index] = !birthStone_line_hide[index]">
-                            <p class="remove-margins" @click="birthStone_line_hide[index] = !birthStone_line_hide[index]">${birthStone.month}</p>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                    <hr>
-                  </div>
-                  {% else product.metafields.my_fields.option_perle %}
-                  {% endif %}
-                </div>
               {%- else -%}
                 <variant-selects class="no-js-hidden" data-section="{{ section.id }}" data-url="{{ product.url }}" {{ block.shopify_attributes }}>
                   {%- for option in product.options_with_values -%}
@@ -301,12 +231,10 @@
                         <select id="Option-{{ section.id }}-{{ forloop.index0 }}"
                           class="select__select"
                           name="options[{{ option.name | escape }}]"
-                          form="product-form-{{ section.id }}"
-                          v-model="variant_selection.option{{ product_option.position }}"
-                          @click="variant_from_options"
+                          form="{{ product_form_id }}"
                         >
                           {%- for value in option.values -%}
-                            <option value="{{ value | escape }}" {% if option.selected_value == value %}selected="selected"{% endif %}  @click="variant_from_options">
+                            <option value="{{ value | escape }}" {% if option.selected_value == value %}selected="selected"{% endif %}>
                               {{ value }}
                             </option>
                           {%- endfor -%}
@@ -321,72 +249,13 @@
                   </script>
                 </variant-selects>
               {%- endif -%}
+            {%- endunless -%}
 
-            <div class="gif-box_wrapper">
-              <h3 class="title_upsell">Add Premium Package</h3>
-              <div class="description_wrapper">
-
-              <div class="gift-box_description">
-                <input type="checkbox" name="gift_box" id="gift_box" v-model="checked_boite" @click="subtotal_order_box">
-                <img class="gift-box_image" src="https://cdn.shopify.com/s/files/1/0598/3721/9012/files/boite-monprecieux.jpg?v=1631360424" alt="">
-                <div class="gift-box_text">
-                  <p>${title_boite}</p>
-                  <p class="price_upsell">${price_boite} €</p>
-                </div>
-              </div>
-              </div>
-            </div>
-            <div class="gif-box_wrapper">
-                <h3 class="title_upsell">Special Offer! Gift a second piece</h3>
-              <div class="description_wrapper">
-                <div class="gift-box_description">
-                  <input type="checkbox" name="gift_box" id="gift_upsell" v-model="checked_upsell" @click="subtotal_order_upsell">
-                  <img class="gift-box_image" :src="img_variant_upsell" alt="">
-                  <div class="gift-box_text">
-                    <p>${title_upsell}</p>
-                    <p class="price_upsell">${price_upsell} €</p>
-                  </div>
-                </div>
-
-                <div class="options_upsell" v-if="checked_upsell">
-                  <div v-for="option in options_upsell" class="product-form__input product-form__input--dropdown">
-                    <label class="form__label" for="Option-{{ section.id }}-{{ forloop.index0 }}">
-                      ${ option.name }
-                    </label>
-                    <div class="select">
-                      <select id="Option-{{ section.id }}-{{ forloop.index0 }}" v-model="option_choosen_upsell" @click="update_upsell">
-                        <option v-for="value in option.values"  >
-                          ${ value }
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  <label class="label__choice-name" for="name_choice_upsell">Write a name of your choice:</label>
-                  <span class="label__max-letters">(Up to 10 characters)</span>
-                  <input type="text" name="name_choice_upsell" id="name_choice_upsell" v-model="name_choosen_upsell">
-                  <label class="label__size-upsell" for="size_upsell">Select adjustable chain length:</label>
-                  <select name="size_upsell" id="size_upsell" form="size_upsell_form" v-model="size_choosen_upsell">
-                    <option value="35cm-40cm">35cm - 40cm</option>
-                    <option value="40cm-45cm" selected>40cm - 45cm</option>
-                    <option value="45cm-50cm">45cm - 50cm</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <div class="subtotal_wrapper">
-              <p>Subtotal : </p>
-              <span>${subtotal} €</span>
-            </div>
-            <button v-on:click="addToCart" class="product-form__submit button button--full-width {% if block.settings.show_dynamic_checkout and product.selling_plan_groups == empty %}button--secondary{% else %}button--primary{% endif %}">Ajout Panier</button>
-            {% comment %}<button v-on:click="test">Test</button>{% endcomment %}
-
-            {{ product.metafields.my_fields.product_upsell }}
-          {%- endunless -%}
             <noscript class="product-form__noscript-wrapper-{{ section.id }}">
               <div class="product-form__input{% if product.has_only_default_variant %} hidden{% endif %}">
                 <label class="form__label" for="Variants-{{ section.id }}">{{ 'products.product.product_variants' | t }}</label>
                 <div class="select">
-                  <select name="id" id="Variants-{{ section.id }}" class="select__select" form="product-form">
+                  <select name="id" id="Variants-{{ section.id }}" class="select__select" form="{{ product_form_id }}">
                     {%- for variant in product.variants -%}
                       <option
                         {% if variant == product.selected_or_first_available_variant %}selected="selected"{% endif %}
@@ -406,24 +275,37 @@
           {%- when 'buy_buttons' -%}
             <div {{ block.shopify_attributes }}>
               <product-form class="product-form">
-                {%- form 'product', product, id: product_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
-                  <input type="hidden" name="id" :value="current_variant_id">
-                  <input type="hidden" name="quantity" value="1">
-                  <input type="hidden" name="properties[Detail]" :value="detailsCommand">
+                <div class="product-form__error-message-wrapper" role="alert" hidden>
+                  <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-error" viewBox="0 0 13 13">
+                    <circle cx="6.5" cy="6.50049" r="5.5" stroke="white" stroke-width="2"/>
+                    <circle cx="6.5" cy="6.5" r="5.5" fill="#EB001B" stroke="#EB001B" stroke-width="0.7"/>
+                    <path d="M5.87413 3.52832L5.97439 7.57216H7.02713L7.12739 3.52832H5.87413ZM6.50076 9.66091C6.88091 9.66091 7.18169 9.37267 7.18169 9.00504C7.18169 8.63742 6.88091 8.34917 6.50076 8.34917C6.12061 8.34917 5.81982 8.63742 5.81982 9.00504C5.81982 9.37267 6.12061 9.66091 6.50076 9.66091Z" fill="white"/>
+                    <path d="M5.87413 3.17832H5.51535L5.52424 3.537L5.6245 7.58083L5.63296 7.92216H5.97439H7.02713H7.36856L7.37702 7.58083L7.47728 3.537L7.48617 3.17832H7.12739H5.87413ZM6.50076 10.0109C7.06121 10.0109 7.5317 9.57872 7.5317 9.00504C7.5317 8.43137 7.06121 7.99918 6.50076 7.99918C5.94031 7.99918 5.46982 8.43137 5.46982 9.00504C5.46982 9.57872 5.94031 10.0109 6.50076 10.0109Z" fill="white" stroke="#EB001B" stroke-width="0.7">
+                  </svg>
+                  <span class="product-form__error-message"></span>
+                </div>
 
+                {%- form 'product', product, id: product_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
+                  <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" disabled>
                   <div class="product-form__buttons">
                     <button
                       type="submit"
                       name="add"
                       class="product-form__submit button button--full-width {% if block.settings.show_dynamic_checkout and product.selling_plan_groups == empty %}button--secondary{% else %}button--primary{% endif %}"
                     {% if product.selected_or_first_available_variant.available == false %}disabled{% endif %}
-                    @click="addToCart"
                     >
-                        {%- if product.selected_or_first_available_variant.available -%}
-                          {{ 'products.product.add_to_cart' | t }}
-                        {%- else -%}
-                          {{ 'products.product.sold_out' | t }}
-                        {%- endif -%}
+                        <span>
+                          {%- if product.selected_or_first_available_variant.available -%}
+                            {{ 'products.product.add_to_cart' | t }}
+                          {%- else -%}
+                            {{ 'products.product.sold_out' | t }}
+                          {%- endif -%}
+                        </span>
+                        <div class="loading-overlay__spinner hidden">
+                          <svg aria-hidden="true" focusable="false" role="presentation" class="spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+                            <circle class="path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle>
+                          </svg>
+                        </div>
                     </button>
                     {%- if block.settings.show_dynamic_checkout -%}
                       {{ form | payment_button }}
@@ -453,6 +335,7 @@
                 </template>
               </pickup-availability>
             </div>
+
             <script src="{{ 'pickup-availability.js' | asset_url }}" defer="defer"></script>
           {%- when 'rating' -%}
             {%- if product.metafields.reviews.rating.value != blank -%}
@@ -481,6 +364,7 @@
       </div>
     </div>
   </div>
+
   <product-modal id="ProductModal-{{ section.id }}" class="product-media-modal media-modal">
     <div class="product-media-modal__dialog" role="dialog" aria-label="{{ 'products.modal.label' | t }}" aria-modal="true" tabindex="-1">
       <button id="ModalClose-{{ section.id }}" type="button" class="product-media-modal__toggle" aria-label="{{ 'accessibility.close' | t }}">{% render 'icon-close' %}</button>
@@ -509,6 +393,7 @@
       </div>
     </div>
   </product-modal>
+
   {% assign popups = section.blocks | where: "type", "popup" %}
   {%- for block in popups -%}
     <modal-dialog id="PopupModal-{{ block.id }}" class="product-popup-modal" {{ block.shopify_attributes }}>
@@ -523,404 +408,6 @@
   {%- endfor -%}
 </section>
 
-
-<script>
-
-  const ProductPage = { 
-    name: "Product",
-    delimiters: ["${", "}"],
-    data() {
-      return {
-        current_variant_id: "{{ product.selected_or_first_available_variant.id }}",
-        variant_selection: {
-          option1: "{{ product.options_with_values[0].selected_value }}",
-          option2: "{{ product.options_with_values[1].selected_value }}",
-          option3: "{{ product.options_with_values[2].selected_value }}",
-        },
-        variants: [
-          {% for variant in product.variants %}
-            {
-              id: "{{ variant.id }}",
-              available: {{ variant.available }},
-              option1: "{{ variant.option1 }}",
-              option2: "{{ variant.option2 }}",
-              option3: "{{ variant.option3 }}",
-              price: "{{ variant.price | money }}",
-              {% assign img_url = variant.image.src | img_url: '500x', scale: 2 %}
-              image: "{% unless img_url contains 'no-image' %}{{ img_url }}{% endunless %}"
-            },
-          {% endfor %}
-        ],
-        fallback_product_image: "{{ featured_image | img_url: '500x', scale: 2 }}",
-        nombre_prenom: 1,
-        show_birthstoneList: false,
-        birthStones : [
-          {month: 'January', image:'https://static.myka.com/option-image/f60d7fc1db2442729504be3ebcd8947b.png'},
-          {month: 'February', image:'https://static.myka.com/option-image/d0309897266e4a5585d8056b417247e3.png'},
-          {month: 'March', image:'https://static.myka.com/option-image/364f9831776c45aa845fa111a4e61217.png'},
-          {month: 'April', image:'https://static.myka.com/option-image/57b3d1a35c3f4c938714cda3dbf5b497.png'},
-          {month: 'May', image:'https://static.myka.com/option-image/717f56cc04a84ea887595d85513dd91e.png'},
-          {month: 'June', image:'https://static.myka.com/option-image/2d389886eeb44babb9b7f73f82d599f4.png'},
-          {month: 'July', image:'https://static.myka.com/option-image/393a2749ed66461ea30336070ec36beb.png'},
-          {month: 'August', image:'https://static.myka.com/option-image/4e931e3e539243bf85d0d8f37bfb33e3.png'},
-          {month: 'September', image:'https://static.myka.com/option-image/f0224ea1a2994198b3786ded393a9f6a.png'},
-          {month: 'October', image:'https://static.myka.com/option-image/ec43048dff324a3784fd62c14356fe4e.png'},
-          {month: 'November', image:'https://static.myka.com/option-image/2c945eecb0e94f1db0c8b10dc82dfbab.png'},
-          {month: 'December', image:'https://static.myka.com/option-image/d185da444bf14c8885889233bcc0945e.png'}
-          ],
-        birthFlowers:  [
-          {month: 'January', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/janvier_-_perce_neige.png?v=1631303466'},
-          {month: 'February', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/fevrier_-_iris.png?v=1631303466'},
-          {month: 'March', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/mars_-_jonquille.png?v=1631303466'},
-          {month: 'April', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/avril_-_margueritte.png?v=1631303466'},
-          {month: 'May', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/mai_-aubepine.png?v=1631303466'},
-          {month: 'June', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/juin_-_rose.png?v=1631303466'},
-          {month: 'July', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/juillet_-_lotus.png?v=1631303466'},
-          {month: 'August', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/aout_-_coquelicot.png?v=1631303466'},
-          {month: 'September', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/septembre_-_gloire_du_matin.png?v=1631303466'},
-          {month: 'October', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/octobre_-_cosmos.png?v=1631303466'},
-          {month: 'November', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/novembre_-_chrysantheme.png?v=1631303466'},
-          {month: 'December', image:'https://cdn.shopify.com/s/files/1/0598/3721/9012/files/decembre_-_houx.png?v=1631303466'}
-        ],
-        birthStone_line_hide: [
-          {% if product.metafields.my_fields.nombre_min != 0 %}
-            {% for nombre_max in (1..product.metafields.my_fields.nombre_min) %}
-              {state : false},
-            {% endfor %}
-          {% else %}
-            {% for nombre_max in (1..product.metafields.my_fields.nombre_max) %}
-              {state : false},
-            {% endfor %}
-          {% endif %}
-          ],
-        birthStone_selected: [
-          {% if product.metafields.my_fields.nombre_min != 0 %}
-            {% for nombre_max in (1..product.metafields.my_fields.nombre_min) %}
-              {month: '', image:''},
-            {% endfor %}
-          {% else %}
-            {% for nombre_max in (1..product.metafields.my_fields.nombre_max) %}
-            {month: '', image:''},
-            {% endfor %}
-          {% endif %}
-        ],
-        prenoms_stones: [
-          {% if product.metafields.my_fields.nombre_min != 0 %}
-            {% for nombre_max in (1..product.metafields.my_fields.nombre_min) %}
-              {prenom: '', birthStone: ''},
-            {% endfor %}
-          {% else %}
-            {% for nombre_max in (1..product.metafields.my_fields.nombre_max) %}
-            {prenom: '', birthStone: ''},
-            {% endfor %}
-          {% endif %}
-        ],
-        detailsCommand: [''],
-        photo_upsell_src:'',
-        title_upsell:'',
-        price_upsell:'',
-        checked_upsell: false,
-        variants_upsell: {},
-        options_upsell: {},
-        name_choosen_upsell:'',
-        size_choosen_upsell:'',
-        option_choosen_upsell:'',
-        current_variant_id_upsell:'',
-        img_variant_upsell:'',
-        photo_boite_src:'',
-        title_boite:'',
-        price_boite:'',
-        checked_boite: false,
-        variants_boite:{},
-        subtotal: "{{ product.selected_or_first_available_variant.price }}"/100,
-
-      }
-    },
-    computed: {
-      current_variant() {
-        return this.variants.find(variant => variant.id == this.current_variant_id);
-      }
-    },
-    created() {
-
-      //Gets the product of the page
-      axios.get("/products/{{ product.handle }}.js").then((results) => {
-         console.log(results);
-      });
-
-      {% if product.metafields.my_fields.option_diamant %}
-        this.birthStone_selected[0].month = this.birthStones[0].month;
-        this.birthStone_selected[0].image = this.birthStones[0].image;
-      {% elsif product.metafields.my_fields.option_fleur %}
-        this.birthStone_selected[0].month = this.birthFlowers[0].month;
-        this.birthStone_selected[0].image = this.birthFlowers[0].image;
-      {% else product.metafields.my_fields.option_perle %}
-        this.birthStone_selected[0].month = this.birthStones[0].month;
-        this.birthStone_selected[0].image = this.birthStones[0].image;
-      {% endif %}
-
-      for (let i = 0; i < {{ product.metafields.my_fields.nombre_max }}; i++) {
-          this.birthStone_line_hide[i] = false;
-      };
-
-      //Gets the product upsell choosen in the dashboard admin
-      axios.get("/products/{{ product.metafields.my_fields.nom_produit_upsell }}.js").then((results) => {
-          console.log(results);
-
-          this.img_variant_upsell = results.data.featured_image;
-          this.title_upsell = results.data.title;
-          this.price_upsell = results.data.price/100;
-          this.variants_upsell = results.data.variants;
-        this.options_upsell = results.data.options;
-        console.log(this.price_upsell);
-      });
-
-      //Gets the gift box upsell (hard coded)
-      axios.get("/products/boite-a-bijoux-mon-precieux.js").then((results) => {
-          console.log(results);
-          this.photo_boite_src= results.data.featured_image;
-          this.title_boite= results.data.title;
-          this.price_boite= results.data.price/100;
-          this.variants_boite = results.data.variants;
-          console.log(this.price_boite);
-      });
-
-      axios.get("/products.json?product_id={{ product.metafields.my_fields.product_upsell }}").then((results) => {
-        console.log(results);
-      });
-
-      },
-    methods: {
-      variant_from_options() {
-        const variant = this.variants.find((variant) => {
-          var match = true;
-          if(variant.option1 != '') {
-            match = variant.option1 == this.variant_selection.option1
-          }
-          if(match && variant.option2 != '') {
-            match = variant.option2 == this.variant_selection.option2
-          }
-          if(match && variant.option3 != '') {
-            match = variant.option3 == this.variant_selection.option3
-          }
-          return match;
-        });
-        this.current_variant_id = variant.id;
-        console.log(`voici mon current_variant_id : ${this.current_variant_id}`)
-      },
-      afficher_pierre(index) {
-        this.isActive = !this.isActive;
-
-        console.log(index);
-      },
-      register_stone(value, index) {
-        this.prenoms_stones[index.index].birthStone = value.birthStone.month;
-        // thi.birthStone_selected.map( item => {
-        //   console.log(item);
-        // });
-        this.birthStone_selected[index.index].month = value.birthStone.month;
-        this.birthStone_selected[index.index].image = value.birthStone.image;
-        console.log(this.active);
-      },
-      update_upsell() {
-        const variant = this.variants_upsell.find((variant) => {
-
-          let match = true;
-          if(variant.option1 != '') {
-            return variant.option1 == this.option_choosen_upsell
-          }
-
-          if(match && variant.option2 != '') {
-            return variant.option2 == this.option_choosen_upsell
-          }
-          if(match && variant.option3 != '') {
-            return variant.option3 == this.option_choosen_upsell
-          }
-          return variant;
-        })
-        this.current_variant_id_upsell = variant.id;
-        this.img_variant_upsell = variant.featured_image.src;
-
-        console.log(variant);
-        console.log(this.current_variant_id_upsell);
-        console.log(this.img_variant_upsell);
-        },
-
-
-      addToCart() {
-        // e.preventDefault();
-        // const prenoms = this.prenoms_stones.prenom;
-        // const birthStones = this.prenoms_stones.birthStone;
-        // let options = [];
-        let data = {};
-        let variants_upsell;
-
-        
-
-        if (this.checked_upsell === true && this.checked_boite === true) {
-           data = {
-            items: [
-              {
-                id: this.current_variant_id,
-                quantity: 1,
-                properties: {
-                  Details: this.detailsCommand
-                },
-              },
-              {
-              id: 40542477910212,
-              quantity: 1,
-              },
-              {
-              id: this.current_variant_id_upsell,
-              quantity: 1,
-                properties: {
-                  Details: {
-                    name: this.name_choosen_upsell,
-                    size: this.size_choosen_upsell,
-                    color: this.option_choosen_upsell,
-                  }
-                }
-              },
-            ]
-          };
-        } else if (this.checked_upsell === true) {
-           data = {
-            items: [
-              {
-                id: this.current_variant_id,
-                quantity: 1,
-                properties: {
-                  Details: this.detailsCommand
-                },
-              },
-              {
-              id: this.current_variant_id_upsell,
-              quantity: 1,
-              properties: {
-                Details: {
-                  name: this.name_choosen_upsell,
-                  size: this.size_choosen_upsell,
-                  color: this.option_choosen_upsell,
-                }
-              }
-              },
-            ]
-          };
-        } else if (this.checked_boite === true) {
-           data = {
-            items: [
-              {
-                id: this.current_variant_id,
-                quantity: 1,
-                properties: {
-                  Details: this.detailsCommand
-                },
-              },
-              {
-              id: this.variants_boite[0].id,
-              quantity: 1,
-              },
-            ]
-          };
-        } else {
-           data = {
-            items: [
-              {
-                id: this.current_variant_id,
-                quantity: 1,
-                properties: {
-                  Details: this.detailsCommand
-                },
-              },
-            ]
-          };
-        }
-      
-        
-        
-        this.prenoms_stones.forEach( (prenom_pierre, index) => {
-          if(prenom_pierre.prenom != '') {
-            let numero = index + 1;
-            this.detailsCommand.push( prenom_pierre)
-          }
-        });
-
-          axios
-          .post("/cart/add.js", data)
-          .then((response) => {
-            console.log(response)
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-
-      },
-      open(index){
-        console.log(index);
-        for (let i = 0; i < 3; i++) {
-          if(i != index) {
-            this.birthStone_line_hide[i] = false;
-          }          
-        };
-        this.birthStone_line_hide[index]= !this.birthStone_line_hide[index];
-        console.log(this.birthStone_line_hide);
-      },
-
-
-
-      test() {
-        console.log("test");
-        console.log(this.nombre_prenom)
-
-      },
-
-      subtotal_order_box() {
-
-        this.checked_boite = !this.checked_boite;
-
-        if ( this.checked_boite == true ) {
-          this.subtotal+= (this.price_boite) ;
-        } else if(this.checked_boite == false) {
-          this.subtotal-= (this.price_boite);
-        }
-
-
-        console.log(this.checked_boite);
-        console.log(this.subtotal);
-      },
-
-      subtotal_order_upsell() {
-
-        this.checked_upsell = !this.checked_upsell;
-
-        if (this.checked_upsell == true) {
-          this.subtotal += (this.price_upsell);
-        } else if(this.checked_upsell == false) {
-          this.subtotal-= (this.price_upsell);
-        }
-        console.log(this.checked_upsell);
-        console.log(this.subtotal);
-      }
-
-    }
-  }
-
-  Vue.createApp(ProductPage).mount('#productPage');
-
-</script>
-
-
-
-
-
-
-
-
-
-
-
-
 {% javascript %}
   class ProductModal extends ModalDialog {
     constructor() {
@@ -929,7 +416,6 @@
 
     hide() {
       super.hide();
-      window.pauseAllMedia();
     }
 
     show(opener) {
