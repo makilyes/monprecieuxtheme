@@ -6,6 +6,21 @@ function getFocusableElements(container) {
   );
 }
 
+document.querySelectorAll('[id^="Details-"] summary').forEach((summary) => {
+  summary.setAttribute('role', 'button');
+  summary.setAttribute('aria-expanded', 'false');
+
+  if(summary.nextElementSibling.getAttribute('id')) {
+    summary.setAttribute('aria-controls', summary.nextElementSibling.id);
+  }
+
+  summary.addEventListener('click', (event) => {
+    event.currentTarget.setAttribute('aria-expanded', !event.currentTarget.closest('details').hasAttribute('open'));
+  });
+
+  summary.parentElement.addEventListener('keyup', onKeyUpEscape);
+});
+
 const trapFocusHandlers = {};
 
 function trapFocus(container, elementToFocus = container) {
@@ -96,7 +111,7 @@ function pauseAllMedia() {
   });
   document.querySelectorAll('video').forEach((video) => video.pause());
   document.querySelectorAll('product-model').forEach((model) => {
-    if (model.modelViewerUI) modelViewerUI.pause();
+    if (model.modelViewerUI) model.modelViewerUI.pause();
   });
 }
 
@@ -116,6 +131,7 @@ function onKeyUpEscape(event) {
 
   const summaryElement = openDetailsElement.querySelector('summary');
   openDetailsElement.removeAttribute('open');
+  summaryElement.setAttribute('aria-expanded', false);
   summaryElement.focus();
 }
 
@@ -148,24 +164,6 @@ function debounce(fn, wait) {
     t = setTimeout(() => fn.apply(this, args), wait);
   };
 }
-
-const serializeForm = form => {
-  const obj = {};
-  const formData = new FormData(form);
-
-  for (const key of formData.keys()) {
-    const regex = /(?:^(properties\[))(.*?)(?:\]$)/;
-
-    if (regex.test(key)) { 
-      obj.properties = obj.properties || {};
-      obj.properties[regex.exec(key)[2]] = formData.get(key);
-    } else {
-      obj[key] = formData.get(key);
-    }
-  }
-
-  return JSON.stringify(obj);
-};
 
 function fetchConfig(type = 'json') {
   return {
@@ -289,8 +287,6 @@ class MenuDrawer extends HTMLElement {
     super();
 
     this.mainDetailsToggle = this.querySelector('details');
-    const summaryElements = this.querySelectorAll('summary');
-    this.addAccessibilityAttributes(summaryElements);
 
     if (navigator.platform === 'iPhone') document.documentElement.style.setProperty('--viewport-height', `${window.innerHeight}px`);
 
@@ -302,14 +298,6 @@ class MenuDrawer extends HTMLElement {
   bindEvents() {
     this.querySelectorAll('summary').forEach(summary => summary.addEventListener('click', this.onSummaryClick.bind(this)));
     this.querySelectorAll('button').forEach(button => button.addEventListener('click', this.onCloseButtonClick.bind(this)));
-  }
-
-  addAccessibilityAttributes(summaryElements) {
-    summaryElements.forEach(element => {
-      element.setAttribute('role', 'button');
-      element.setAttribute('aria-expanded', false);
-      element.setAttribute('aria-controls', element.nextElementSibling.id);
-    });
   }
 
   onKeyUp(event) {
@@ -334,6 +322,7 @@ class MenuDrawer extends HTMLElement {
 
       setTimeout(() => {
         detailsElement.classList.add('menu-opening');
+        summaryElement.setAttribute('aria-expanded', true);
       });
     }
   }
@@ -374,6 +363,7 @@ class MenuDrawer extends HTMLElement {
 
   closeSubmenu(detailsElement) {
     detailsElement.classList.remove('menu-opening');
+    detailsElement.querySelector('summary').setAttribute('aria-expanded', false);
     removeTrapFocus();
     this.closeAnimation(detailsElement);
   }
@@ -454,6 +444,7 @@ class ModalDialog extends HTMLElement {
     this.setAttribute('open', '');
     if (popup) popup.loadContent();
     trapFocus(this, this.querySelector('[role="dialog"]'));
+    window.pauseAllMedia();
   }
 
   hide() {
@@ -536,13 +527,13 @@ class SliderComponent extends HTMLElement {
     this.currentPage = Math.round(this.slider.scrollLeft / this.sliderLastItem.clientWidth) + 1;
 
     if (this.currentPage === 1) {
-      this.prevButton.setAttribute('disabled', true);
+      this.prevButton.setAttribute('disabled', 'disabled');
     } else {
       this.prevButton.removeAttribute('disabled');
     }
 
     if (this.currentPage === this.totalPages) {
-      this.nextButton.setAttribute('disabled', true);
+      this.nextButton.setAttribute('disabled', 'disabled');
     } else {
       this.nextButton.removeAttribute('disabled');
     }
@@ -573,6 +564,7 @@ class VariantSelects extends HTMLElement {
     this.updateMasterId();
     this.toggleAddButton(true, '', false);
     this.updatePickupAvailability();
+    this.removeErrorMessage();
 
     if (!this.currentVariant) {
       this.toggleAddButton(true, '', true);
@@ -582,6 +574,7 @@ class VariantSelects extends HTMLElement {
       this.updateURL();
       this.updateVariantInput();
       this.renderProductInfo();
+      this.updateShareUrl();
     }
   }
 
@@ -615,12 +608,21 @@ class VariantSelects extends HTMLElement {
     if(this.stickyHeader) {
       this.stickyHeader.dispatchEvent(new Event('preventHeaderReveal'));
     }
-    window.setTimeout(() => { parent.querySelector('li.product__media-item').scrollIntoView({behavior: "smooth"}); });
+    window.setTimeout(() => {
+      parent.scrollLeft = 0;
+      parent.querySelector('li.product__media-item').scrollIntoView({behavior: 'smooth'});
+    });
   }
 
   updateURL() {
     if (!this.currentVariant || this.dataset.updateUrl === 'false') return;
     window.history.replaceState({ }, '', `${this.dataset.url}?variant=${this.currentVariant.id}`);
+  }
+
+  updateShareUrl() {
+    const shareButton = document.getElementById(`Share-${this.dataset.section}`);
+    if (!shareButton) return;
+    shareButton.updateUrl(`${window.shopUrl}${this.dataset.url}?variant=${this.currentVariant.id}`);
   }
 
   updateVariantInput() {
@@ -642,6 +644,14 @@ class VariantSelects extends HTMLElement {
       pickUpAvailability.removeAttribute('available');
       pickUpAvailability.innerHTML = '';
     }
+  }
+
+  removeErrorMessage() {
+    const section = this.closest('section');
+    if (!section) return;
+
+    const productForm = section.querySelector('product-form');
+    if (productForm) productForm.handleErrorMessage();
   }
 
   renderProductInfo() {
@@ -666,15 +676,16 @@ class VariantSelects extends HTMLElement {
     const productForm = document.getElementById(`product-form-${this.dataset.section}`);
     if (!productForm) return;
     const addButton = productForm.querySelector('[name="add"]');
+    const addButtonText = productForm.querySelector('[name="add"] > span');
 
     if (!addButton) return;
 
     if (disable) {
-      addButton.setAttribute('disabled', true);
-      if (text) addButton.textContent = text;
+      addButton.setAttribute('disabled', 'disabled');
+      if (text) addButtonText.textContent = text;
     } else {
       addButton.removeAttribute('disabled');
-      addButton.textContent = window.variantStrings.addToCart;
+      addButtonText.textContent = window.variantStrings.addToCart;
     }
 
     if (!modifyClass) return;
@@ -683,9 +694,10 @@ class VariantSelects extends HTMLElement {
   setUnavailable() {
     const button = document.getElementById(`product-form-${this.dataset.section}`);
     const addButton = button.querySelector('[name="add"]');
+    const addButtonText = button.querySelector('[name="add"] > span');
     const price = document.getElementById(`price-${this.dataset.section}`);
     if (!addButton) return;
-    addButton.textContent = window.variantStrings.unavailable;
+    addButtonText.textContent = window.variantStrings.unavailable;
     if (price) price.classList.add('visibility-hidden');
   }
 
@@ -711,52 +723,3 @@ class VariantRadios extends VariantSelects {
 }
 
 customElements.define('variant-radios', VariantRadios);
-
-
-//MyVueJS script
-
-const store = Vue.reactive({
-  state: {
-    cartState: []
-  },
-
-  getCart() {
-    axios.get('/cart.js')
-        .then(response => {
-          this.state.cartState.unshift(response.data)
-        })
-        .catch(error => {
-          console.log(error)
-        })
-  }
-})
-
-const miniCartState = Vue.reactive({
-  hidden: true
-})
-
-const toggleMiniCart = {
-  openCart() {
-    miniCartState.hidden = !miniCartState.hidden
-    menuState.hidden = true
-  }
-}
-
-const menuState = Vue.reactive({
-  hidden: true
-})
-
-const toggleMenu = {
-  openMenu() {
-    menuState.hidden = !menuState.hidden
-    miniCartState.hidden = true
-  }
-}
-
-const toggleClose = {
-  closeAll() {
-    miniCartState.hidden = true
-    menuState.hidden = true
-  }
-}
-
