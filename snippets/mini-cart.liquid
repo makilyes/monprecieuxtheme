@@ -1,0 +1,53 @@
+{{ 'component-mini-cart.css' | asset_url | stylesheet_tag }}
+
+<!-- <div class="cart-form"> -->
+<h2 class="minicart__title">VOIR VOTRE PANIER (${cart.item_count})</h2>
+<p class="minicart__freeDelivery-text">On y presque, il manque <span>$40,10</span> pour debloquer la</p>
+<p class="minicart__freeDelivery-title">LIVRAISON OFFERTE</p>
+<div class="progress-bar__wrapper">
+    <div class="progress-bar" ></div>
+</div>
+<!-- </div> -->
+<template v-if="cart && cart.items.length > 0">
+    <div class="mini-cart-rows">
+        <div class="mini-cart-item" v-for="item in cart.items">
+            <div class="mini-cart-image-wrapper" v-if="item.image">
+                <a :href="item.url">
+                    <img :src="item.image" :alt="item.title" />
+                </a>
+            </div>
+            <div class="mini-cart-item-right">
+                <div>
+                    <a :href="item.url">${ item.title }</a>
+                </div>
+                <div>${ money(item.price) }</div>
+                <div class="mini-cart-quantity">
+                    <input type="text" v-model="item.quantity" />
+                    <button class="mini-cart-quantity-button" @click="decrement(item)">-</button>
+                    <button class="mini-cart-quantity-button" @click="increment(item)">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div class="checkout-subtotal">
+            <p>Subtotal: </p>
+            <p>${ money(cart.total_price) }</p>
+        </div>
+        <a href="/checkout" class="checkout-button">Checkout</a>
+    </div>
+    <div class="contest">
+        <p class="contest__title"> Depensez et debloquez des produits offers</p>
+    </div>
+</template>
+
+
+<template v-else>
+    <p class="cart-empty">The cart is empty</p>
+    <div class="mini-cart-image-wrapper" v-if="item.image">
+        <a :href="item.url">
+            <img :src="item.image" :alt="item.title" />
+        </a>
+    </div>
+</template>
+</div>

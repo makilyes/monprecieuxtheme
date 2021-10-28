@@ -217,8 +217,8 @@
                   Nombre de Prenom
                 </label>
                 {% if product.metafields.my_fields.nombre_min != 0 %}
-                    <select id="nombrePrenom" v-model.number="nombre_prenom" @click="test">
-                        <option v-for="{{ product.metafields.my_fields.nombre_min }}" @click="test">{{ product.metafields.my_fields.nombre_min }}</option>
+                    <select id="nombrePrenom" v-model.number="nombre_prenom" >
+                        <option v-for="{{ product.metafields.my_fields.nombre_min }}" v-html="{{ product.metafields.my_fields.nombre_min }}" ></option>
                     </select>
                 {% else %}
                   <select id="nombrePrenom" v-model.number="nombre_prenom">
@@ -408,7 +408,7 @@
             <div {{ block.shopify_attributes }}>
               <product-form class="product-form">
                 {%- form 'product', product, id: product_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
-                  {% comment %}<input type="hidden" name="id" :value="current_variant_id">{% endcomment %}
+                  <input type="hidden" name="id" :value="current_variant_id">
                   <input type="hidden" name="quantity" value="1">
                   <input type="hidden" name="properties[Detail]" :value="detailsCommand">
 
@@ -748,7 +748,10 @@
         console.log(this.current_variant_id_upsell);
         console.log(this.img_variant_upsell);
         },
+
+
       addToCart() {
+        // e.preventDefault();
         // const prenoms = this.prenoms_stones.prenom;
         // const birthStones = this.prenoms_stones.birthStone;
         // let options = [];
